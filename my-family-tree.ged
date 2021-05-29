@@ -3294,7 +3294,7 @@
 2 DATE 22 APR 1927
 2 PLAC Wannweil
 1 RESI
-2 PLAC Villastr. 7, Kirchentellinsfurt, 72138
+2 PLAC Kirchentellinsfurt
 1 FAMC @F0120@
 2 PEDI birth
 1 FAMS @F0119@
@@ -3323,7 +3323,7 @@
 2 DATE 8 JUL 1955
 2 PLAC Tübingen
 1 RESI
-2 PLAC Villastr. 7, Kirchentellinsfurt, 72138
+2 PLAC Kirchentellinsfurt
 1 FAMC @F0119@
 2 PEDI birth
 1 NOTE @N0047@
@@ -12257,7 +12257,7 @@
 2 PLAC Unknown
 2 NOTE @N0119@
 1 RESI
-2 PLAC Am Erlenhof 36, Pohlheim, 35415
+2 PLAC Pohlheim
 1 OCCU Biologie
 1 FAMC @F0418@
 2 PEDI birth
@@ -12923,7 +12923,7 @@
 2 DATE 5 FEB 1979
 2 PLAC Bottrop-Kirchhellen
 1 RESI
-2 PLAC Grüner Winkel 21, Speyer, 67346
+2 PLAC Speyer
 1 OCCU Dipl.Betriebswirt (Marketing)
 1 FAMC @F0429@
 2 PEDI birth
@@ -13064,7 +13064,7 @@
 2 PLAC Unknown
 2 NOTE @N0131@
 1 RESI
-2 PLAC Frankfurter Str. 61, Gießen, 35392
+2 PLAC Gießen
 1 FAMC @F0038@
 2 PEDI birth
 1 CHAN
@@ -14686,7 +14686,7 @@
 2 DATE 9 SEP 1974
 2 PLAC Speyer
 1 RESI
-2 PLAC Lillengasse 2, Schifferstadt, 67105
+2 PLAC Schifferstadt
 1 OCCU Chemotechniker
 1 FAMC @F0477@
 2 PEDI birth
@@ -14736,7 +14736,7 @@
 2 DATE 10 MAY 1950
 2 PLAC Speyer
 1 RESI
-2 PLAC Paul-Neumann-Str. 35, Speyer
+2 PLAC Speyer
 1 FAMS @F0477@
 1 CHAN
 2 DATE 27 MAY 2021
@@ -14761,7 +14761,7 @@
 2 DATE 21 JUN 1936
 2 PLAC Diedesfeld
 1 RESI
-2 PLAC Dr.-Hepp-Str. 6, Neustadt a.d. Weinstrasse, 67434
+2 PLAC Neustadt a.d. Weinstrasse
 1 FAMS @F0418@
 1 CHAN
 2 DATE 27 MAY 2021
@@ -20849,7 +20849,7 @@
 1 CONT 
 1 CONT Tag recognized but not supported                                    Lin
 1 CONC e  3394: 3 _LOC @@L2@@
-0 @N0049@ NOTE Adr.: Turiner Str. 10, 13347 Berlin, Tel.: 030-45082464
+0 @N0049@ NOTE Adr.: Berlin
 1 CONT Records not imported into INDI (individual) Gramps ID I0224:
 1 CONT 
 1 CONT Tag recognized but not supported                                    Lin
@@ -21076,7 +21076,7 @@
 0 @N0118@ NOTE 
 1 CONT Phy_description: Geschäftsführerin der Krimmel'schen Manufakturwarenhand
 1 CONC lung
-0 @N0119@ NOTE Phone: 0641-9845676 ?
+0 @N0119@ NOTE
 0 @N0120@ NOTE 
 1 CONT Name Prefix: Dr.rer.nat. 
 1 CONT Records not imported into INDI (individual) Gramps ID I0919:
@@ -21097,17 +21097,17 @@
 1 CONT 
 1 CONT Tag recognized but not supported                                    Lin
 1 CONC e 12791: 3 _LOC @@L2@@
-0 @N0125@ NOTE Neuwiesenrebenstr. 21, 76275 Ettlingen, Tel: 07243-3507953, mobil
-1 CONC : 0176-29719689
-0 @N0126@ NOTE Neuwiesenrebenstr. 21, 76275 Ettlingen, Tel: 07243-3507953, mobil
-1 CONC : 0176-45195355
+0 @N0125@ NOTE Ettlingen
+1 CONC : 
+0 @N0126@ NOTE Ettlingen
+1 CONC : 
 0 @N0127@ NOTE 
 1 CONT Name Prefix: Dr.med.
-0 @N0128@ NOTE Samariterstr. 7, 10247 Berlin
+0 @N0128@ NOTE Berlin
 0 @N0129@ NOTE 
 1 CONT 
 0 @N0130@ NOTE 
-0 @N0131@ NOTE Phone: 0641-9845676
+0 @N0131@ NOTE 
 0 @N0132@ NOTE 
 1 CONT Religion: evangelisch
 0 @N0133@ NOTE 
@@ -21244,7 +21244,7 @@
 0 @N0183@ NOTE 
 1 CONT Religion: evangelisch
 0 @N0184@ NOTE 
-1 CONT WWW: dijana.palm@@gmail.com
+1 CONT 
 0 @N0185@ NOTE 
 1 CONT Religion: katholisch
 0 @N0186@ NOTE Records not imported into INDI (individual) Gramps ID I1119:
@@ -21271,7 +21271,7 @@
 1 CONC e 15937: 3 _LOC @@L2@@
 0 @N0191@ NOTE 
 1 CONT Name Prefix: Dr.phil. 
-1 CONT Samariterstr. 7, 10247 Berlin
+1 CONT Berlin
 0 @N0192@ NOTE Freiburg, Germany
 0 @N0193@ NOTE Ponferrada, Spain
 0 @N0194@ NOTE La Villa de Don Fadrique, Toledo, Spain
