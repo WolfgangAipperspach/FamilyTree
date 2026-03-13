@@ -1,0 +1,471 @@
+0 HEAD
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 LANG Spanish
+1 SOUR FamilyTree
+2 NAME Fernández Álvarez Ancestry
+2 VERS 1.0
+1 DATE 12 MAR 2026
+1 FILE Fernandez-Alvarez.ged
+1 NOTE Compiled from handwritten ancestor charts (árbol genealógico de Dani).
+2 CONT Source: familyTree/arbol geneologico de Dani/ (Scan_0457-01.jpg through Scan_0475-01.jpg)
+2 CONT Subject: Daniel Ángel Fernández Álvarez, born 18 Dec 1953, Ponferrada (El Bierzo, León, España).
+2 CONT Charts are organized by generation: PRIMERO (1st gen back) to OCTAVO (8th gen back).
+2 CONT Many names, dates and relationships are uncertain due to the handwritten and partially
+2 CONT legible nature of the source scans. Uncertain items are marked with (?) in notes.
+2 CONT Place of origin: Ponferrada / El Bierzo area, León, España.
+2 CONT Notable village: Carracedo del Monasterio (El Bierzo, León) mentioned as family home.
+
+0 @I0001@ INDI
+1 NAME Daniel Ángel /Fernández Álvarez/
+2 GIVN Daniel Ángel
+2 SURN Fernández Álvarez
+1 SEX M
+1 BIRT
+2 DATE 18 DEC 1953
+2 PLAC Ponferrada, León, España
+1 FAMC @F0001@
+1 NOTE Subject of the ancestry charts. Known as "Dani".
+2 CONT Married Leonor Molina Gómez (see Molina-Prous.ged / my-family-tree.ged).
+2 CONT Source: Familia Molina Prous.odt + Scan_0475-01.jpg (PRIMERO chart)
+
+0 @I0002@ INDI
+1 NAME Emilio /Fernández Álvarez/
+2 GIVN Emilio
+2 SURN Fernández Álvarez
+1 SEX M
+1 FAMS @F0001@
+1 FAMC @F0002@
+1 NOTE Probable father of Daniel Ángel Fernández Álvarez.
+2 CONT First surname Fernández confirmed by son's compound surname.
+2 CONT Second surname Álvarez (from his own mother's line).
+2 CONT From Ponferrada area. Full name uncertain — possibly also "Emilio Antonio".
+2 CONT Source: Scan_0457-01.jpg, Scan_0475-01.jpg (PRIMERO chart)
+
+0 @I0003@ INDI
+1 NAME Ma de los Ángeles /Álvarez Paz/
+2 GIVN Ma de los Ángeles
+2 SURN Álvarez Paz
+1 SEX F
+1 FAMS @F0001@
+1 FAMC @F0003@
+1 NOTE Mother of Daniel Ángel Fernández Álvarez.
+2 CONT First surname Álvarez (from her father Daniel Álvarez Cubelos).
+2 CONT Second surname Paz (from her mother, unknown given name).
+2 CONT Source: Scan_0475-01.jpg (PRIMERO chart)
+
+0 @F0001@ FAM
+1 HUSB @I0002@
+1 WIFE @I0003@
+1 CHIL @I0001@
+1 NOTE Parents of Daniel Ángel Fernández Álvarez.
+2 CONT Ponferrada area (El Bierzo, León). Source: Scan_0475-01.jpg
+
+0 @I0004@ INDI
+1 NAME José /Fernández Cubelos/
+2 GIVN José
+2 SURN Fernández Cubelos
+1 SEX M
+1 BIRT
+2 DATE ABT 1890
+2 PLAC Cubelos, El Bierzo, León, España
+1 FAMS @F0002@
+1 NOTE Probable paternal grandfather of Daniel Ángel Fernández Álvarez (father of Emilio Fernández Álvarez).
+2 CONT "Cubelos" refers to Cubelos de las Aguas, a village in El Bierzo, León.
+2 CONT Birth year estimated — appears in chart as ~1921 but likely transcription of generation reference.
+2 CONT Source: Scan_0475-01.jpg (PRIMERO chart)
+
+0 @I0005@ INDI
+1 NAME Orencia /Prieto Álvarez/
+2 GIVN Orencia
+2 SURN Prieto Álvarez
+1 SEX F
+1 BIRT
+2 DATE ABT 1895
+2 PLAC El Bierzo, León, España
+1 FAMS @F0002@
+1 NOTE Probable paternal grandmother of Daniel Ángel Fernández Álvarez (wife of José Fernández Cubelos).
+2 CONT Birth year estimated. Relationship uncertain — also appears in SEXTO chart context.
+2 CONT Source: Scan_0470-01.jpg (SEXTO chart), Scan_0475-01.jpg
+
+0 @F0002@ FAM
+1 HUSB @I0004@
+1 WIFE @I0005@
+1 CHIL @I0002@
+1 NOTE Paternal grandparents of Daniel Ángel Fernández Álvarez (uncertain — relationship inferred from chart structure).
+2 CONT Source: Scan_0475-01.jpg
+
+0 @I0006@ INDI
+1 NAME Daniel /Álvarez Cubelos/
+2 GIVN Daniel
+2 SURN Álvarez Cubelos
+1 SEX M
+1 BIRT
+2 DATE ABT 1905
+2 PLAC Cubelos, El Bierzo, León, España
+1 FAMS @F0003@
+1 NOTE Maternal grandfather of Daniel Ángel Fernández Álvarez (father of Ma de los Ángeles Álvarez Paz).
+2 CONT Born approximately 1905 in Cubelos area (El Bierzo).
+2 CONT "Cubelos" = Cubelos de las Aguas, El Bierzo, León.
+2 CONT Source: Scan_0470-01.jpg (SEXTO chart), Scan_0475-01.jpg
+
+0 @I0007@ INDI
+1 NAME /Paz/
+2 SURN Paz
+1 SEX F
+1 FAMS @F0003@
+1 NOTE Maternal grandmother of Daniel Ángel Fernández Álvarez (wife of Daniel Álvarez Cubelos).
+2 CONT Given name unknown. First surname Paz confirmed by daughter's compound surname (Álvarez Paz).
+2 CONT Source: inferred from surname structure
+
+0 @F0003@ FAM
+1 HUSB @I0006@
+1 WIFE @I0007@
+1 CHIL @I0003@
+1 NOTE Maternal grandparents of Daniel Ángel Fernández Álvarez.
+2 CONT Daniel Álvarez Cubelos + unknown Paz woman → Ma de los Ángeles Álvarez Paz.
+2 CONT Source: Scan_0470-01.jpg, Scan_0475-01.jpg
+
+0 @I0008@ INDI
+1 NAME Pablo /Fernández Álvarez/
+2 GIVN Pablo
+2 SURN Fernández Álvarez
+1 SEX M
+1 NOTE Possible sibling or relative of Emilio Fernández Álvarez (same compound surname).
+2 CONT Relationship to Daniel Ángel Fernández Álvarez uncertain.
+2 CONT Source: Scan_0457-01.jpg
+
+0 @I0009@ INDI
+1 NAME Sebastián /Prieto Llamas/
+2 GIVN Sebastián
+2 SURN Prieto Llamas
+1 SEX M
+1 BIRT
+2 DATE ABT 1841
+2 PLAC Ponferrada, León, España
+1 NOTE 4th generation ancestor (great-great-grandfather level).
+2 CONT Born approximately 1841 in Ponferrada. Baptism record referenced:
+2 CONT "Libro de Bautismos de Ponferrada".
+2 CONT Branch: Prieto-Llamas line.
+2 CONT Source: Scan_0472-01.jpg (CUARTO chart)
+
+0 @I0010@ INDI
+1 NAME José /Franco/
+2 GIVN José
+2 SURN Franco
+1 SEX M
+1 BIRT
+2 DATE ABT 1880
+2 PLAC Ponferrada, León, España
+1 FAMS @F0004@
+1 FAMC @F0007@
+1 NOTE 4th generation ancestor. Also noted as "Franck" in some chart entries.
+2 CONT Born approximately 1880 in Ponferrada area.
+2 CONT Son of Francisco Franco (5th gen, see @I0017@).
+2 CONT Source: Scan_0472-01.jpg (CUARTO chart)
+
+0 @I0011@ INDI
+1 NAME Mª Carmen /Llamas/
+2 GIVN Mª Carmen
+2 SURN Llamas
+1 SEX F
+1 BIRT
+2 DATE ABT 1880
+1 FAMS @F0004@
+1 FAMC @F0008@
+1 NOTE 4th generation ancestor.
+2 CONT Born approximately 1880.
+2 CONT Daughter of Domingo Llamas (5th gen, see @I0018@).
+2 CONT Source: Scan_0472-01.jpg (CUARTO chart)
+
+0 @F0004@ FAM
+1 HUSB @I0010@
+1 WIFE @I0011@
+1 NOTE José Franco + Mª Carmen Llamas. 4th generation ancestors.
+2 CONT Ponferrada area. Source: Scan_0472-01.jpg (CUARTO chart)
+
+0 @I0012@ INDI
+1 NAME Fabián /Álvarez Núñez/
+2 GIVN Fabián
+2 SURN Álvarez Núñez
+1 SEX M
+1 BIRT
+2 DATE ABT 1825
+1 FAMS @F0005@
+1 NOTE 6th generation ancestor, Álvarez line.
+2 CONT Born approximately 1822–1828.
+2 CONT Source: Scan_0470-01.jpg (SEXTO chart)
+
+0 @I0013@ INDI
+1 NAME Ignacia /Prieto Acebo/
+2 GIVN Ignacia
+2 SURN Prieto Acebo
+1 SEX F
+1 BIRT
+2 DATE ABT 1828
+1 FAMS @F0005@
+1 NOTE 6th generation ancestor, Prieto line.
+2 CONT Born approximately 1828.
+2 CONT Source: Scan_0470-01.jpg (SEXTO chart)
+
+0 @F0005@ FAM
+1 HUSB @I0012@
+1 WIFE @I0013@
+1 NOTE Fabián Álvarez Núñez + Ignacia Prieto Acebo. 6th generation ancestors.
+2 CONT Source: Scan_0470-01.jpg (SEXTO chart)
+
+0 @I0014@ INDI
+1 NAME Antonio /Trío Álvarez/
+2 GIVN Antonio
+2 SURN Trío Álvarez
+1 SEX M
+1 FAMS @F0006@
+1 NOTE 7th generation ancestor, Trío-Álvarez line.
+2 CONT Surname "Trío" may be uncertain transcription from faded handwriting.
+2 CONT Source: Scan_0469-01.jpg (SEPTIMO chart)
+
+0 @I0015@ INDI
+1 NAME Josefa /Trío Paura/
+2 GIVN Josefa
+2 SURN Trío Paura
+1 SEX F
+1 FAMS @F0006@
+1 NOTE 7th generation ancestor.
+2 CONT Surname "Trío Paura" may be uncertain transcription — possibly "Trío del Pauro" or similar.
+2 CONT Appears also in OCTAVO chart context (Scan_0468).
+2 CONT Source: Scan_0469-01.jpg (SEPTIMO chart), Scan_0468-01.jpg (OCTAVO chart)
+
+0 @F0006@ FAM
+1 HUSB @I0014@
+1 WIFE @I0015@
+1 NOTE Antonio Trío Álvarez + Josefa Trío Paura. 7th generation ancestors.
+2 CONT Source: Scan_0469-01.jpg (SEPTIMO chart)
+
+0 @I0016@ INDI
+1 NAME Valentina /López Álvarez Dávila/
+2 GIVN Valentina
+2 SURN López Álvarez Dávila
+1 SEX F
+1 BIRT
+2 DATE ABT 1857
+1 NOTE 7th generation ancestor.
+2 CONT Born approximately 1857. Compound surname suggests multiple family lines.
+2 CONT Source: Scan_0469-01.jpg (SEPTIMO chart)
+
+0 @I0017@ INDI
+1 NAME Joseph /Trío Alcántara/
+2 GIVN Joseph
+2 SURN Trío Alcántara
+1 SEX M
+1 BIRT
+2 DATE ABT 1822
+2 PLAC Toreno, El Bierzo, León, España
+1 NOTE 3rd generation ancestor.
+2 CONT Born approximately 1821–1823 in Toreno or Carucedo (El Bierzo, León).
+2 CONT Notes in chart reference Salamanca and possibly a clerical/notarial role (bachiller?).
+2 CONT Source: Scan_0473-01.jpg (TERCERO chart)
+
+0 @I0018@ INDI
+1 NAME Lorenza //
+2 GIVN Lorenza
+1 SEX F
+1 BIRT
+2 DATE 1830
+1 NOTE 3rd or 4th generation ancestor. Born 1830.
+2 CONT Source: Scan_0473-01.jpg (TERCERO chart)
+
+0 @I0019@ INDI
+1 NAME Daniela //
+2 GIVN Daniela
+1 SEX F
+1 BIRT
+2 DATE 1831
+1 NOTE 3rd or 4th generation ancestor. Born 1831.
+2 CONT Possibly daughter of Franco Santibáñez (?) — uncertain.
+2 CONT Source: Scan_0473-01.jpg (TERCERO chart)
+
+0 @I0020@ INDI
+1 NAME Francisco /Franco/
+2 GIVN Francisco
+2 SURN Franco
+1 SEX M
+1 FAMS @F0007@
+1 NOTE 5th generation ancestor. Father of José Franco (4th gen, @I0010@).
+2 CONT Source: Scan_0472-01.jpg (CUARTO chart)
+
+0 @I0021@ INDI
+1 NAME Mario /Álvarez/
+2 GIVN Mario
+2 SURN Álvarez
+1 SEX M
+1 NOTE 5th generation ancestor, Álvarez line.
+2 CONT Source: Scan_0472-01.jpg (CUARTO chart)
+
+0 @I0022@ INDI
+1 NAME Domingo /Llamas/
+2 GIVN Domingo
+2 SURN Llamas
+1 SEX M
+1 FAMS @F0008@
+1 NOTE 5th generation ancestor. Father of Mª Carmen Llamas (4th gen, @I0011@).
+2 CONT Source: Scan_0472-01.jpg (CUARTO chart)
+
+0 @I0023@ INDI
+1 NAME Francisco /de Alba/
+2 GIVN Francisco
+2 SURN de Alba
+1 SEX M
+1 NOTE 5th generation ancestor.
+2 CONT Source: Scan_0472-01.jpg (CUARTO chart)
+
+0 @F0007@ FAM
+1 HUSB @I0020@
+1 CHIL @I0010@
+1 NOTE Francisco Franco → José Franco. 5th to 4th generation.
+2 CONT Source: Scan_0472-01.jpg (CUARTO chart)
+
+0 @F0008@ FAM
+1 HUSB @I0022@
+1 CHIL @I0011@
+1 NOTE Domingo Llamas → Mª Carmen Llamas. 5th to 4th generation.
+2 CONT Source: Scan_0472-01.jpg (CUARTO chart)
+
+0 @I0024@ INDI
+1 NAME Elias /Fernández/
+2 GIVN Elias
+2 SURN Fernández
+1 SEX M
+1 FAMS @F0009@
+1 NOTE Ancestor in Fernández paternal line.
+2 CONT Source: Scan_0457-01.jpg
+
+0 @I0025@ INDI
+1 NAME Josefa /Álvarez/
+2 GIVN Josefa
+2 SURN Álvarez
+1 SEX F
+1 FAMS @F0009@
+1 NOTE Ancestor, wife of Elias Fernández.
+2 CONT Source: Scan_0457-01.jpg
+
+0 @F0009@ FAM
+1 HUSB @I0024@
+1 WIFE @I0025@
+1 NOTE Elias Fernández + Josefa Álvarez. Ancestors in Fernández line.
+2 CONT Source: Scan_0457-01.jpg
+
+0 @I0026@ INDI
+1 NAME Antonio /Álvarez/
+2 GIVN Antonio
+2 SURN Álvarez
+1 SEX M
+1 BIRT
+2 DATE ABT 1821
+1 FAMS @F0010@
+1 NOTE Ancestor, Álvarez line. Born approximately 1821.
+2 CONT Source: Scan_0457-01.jpg
+
+0 @I0027@ INDI
+1 NAME Josefa /Díaz/
+2 GIVN Josefa
+2 SURN Díaz
+1 SEX F
+1 FAMS @F0010@
+1 NOTE Ancestor, wife of Antonio Álvarez.
+2 CONT Source: Scan_0457-01.jpg
+
+0 @F0010@ FAM
+1 HUSB @I0026@
+1 WIFE @I0027@
+1 MARR
+2 DATE ABT 1821
+1 NOTE Antonio Álvarez + Josefa Díaz. Ancestors in Álvarez line.
+2 CONT Source: Scan_0457-01.jpg
+
+0 @I0028@ INDI
+1 NAME Catalino /Álvarez/
+2 GIVN Catalino
+2 SURN Álvarez
+1 SEX M
+1 FAMS @F0011@
+1 NOTE Ancestor, Álvarez line. Ponferrada area.
+2 CONT Source: Scan_0457-01.jpg
+
+0 @I0029@ INDI
+1 NAME Manuela Antonia /Cabeza/
+2 GIVN Manuela Antonia
+2 SURN Cabeza
+1 SEX F
+1 FAMS @F0011@
+1 NOTE Ancestor, wife of Catalino Álvarez.
+2 CONT Source: Scan_0457-01.jpg
+
+0 @F0011@ FAM
+1 HUSB @I0028@
+1 WIFE @I0029@
+1 NOTE Catalino Álvarez + Manuela Antonia Cabeza. Ponferrada area.
+2 CONT Note: "En 1914 del Pazo de Ponferrada" event referenced in chart.
+2 CONT Source: Scan_0457-01.jpg
+
+0 @I0030@ INDI
+1 NAME Antonia /Martínez Fernández/
+2 GIVN Antonia
+2 SURN Martínez Fernández
+1 SEX F
+1 NOTE Ancestor in Fernández or Martínez line.
+2 CONT Source: Scan_0457-01.jpg
+
+0 @I0031@ INDI
+1 NAME Rosario /Martínez Fernández/
+2 GIVN Rosario
+2 SURN Martínez Fernández
+1 SEX F
+1 NOTE Ancestor or relative in Fernández/Martínez line. Possibly sibling of Antonia Martínez Fernández.
+2 CONT Source: Scan_0457-01.jpg
+
+0 @I0032@ INDI
+1 NAME Santiago //
+2 GIVN Santiago
+1 SEX M
+1 NOTE 7th generation ancestor (SEPTIMO chart).
+2 CONT Source: Scan_0469-01.jpg (SEPTIMO chart)
+
+0 @I0033@ INDI
+1 NAME Francisca //
+2 GIVN Francisca
+1 SEX F
+1 NOTE 7th generation ancestor (SEPTIMO chart).
+2 CONT Source: Scan_0469-01.jpg (SEPTIMO chart)
+
+0 @I0034@ INDI
+1 NAME Isidora //
+2 GIVN Isidora
+1 SEX F
+1 NOTE 7th generation ancestor (SEPTIMO chart).
+2 CONT Source: Scan_0469-01.jpg (SEPTIMO chart)
+
+0 @I0035@ INDI
+1 NAME Basilio //
+2 GIVN Basilio
+1 SEX M
+1 NOTE 7th generation ancestor (SEPTIMO chart).
+2 CONT Source: Scan_0469-01.jpg (SEPTIMO chart)
+
+0 @I0036@ INDI
+1 NAME Catalina //
+2 GIVN Catalina
+1 SEX F
+1 NOTE 7th generation ancestor (SEPTIMO chart).
+2 CONT Source: Scan_0469-01.jpg (SEPTIMO chart)
+
+0 @I0037@ INDI
+1 NAME Manuel /Rodríguez/
+2 GIVN Manuel
+2 SURN Rodríguez
+1 SEX M
+1 NOTE 7th generation ancestor (SEPTIMO chart). Rodríguez surname noted.
+2 CONT Source: Scan_0469-01.jpg (SEPTIMO chart)
+
+0 TRLR
