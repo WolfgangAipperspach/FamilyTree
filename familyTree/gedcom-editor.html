@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="es" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GEDCOM Editor</title>
+<style>
+/* ── Reset & Base ──────────────────────────────────────────────────────── */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #111827;
+       color: #e5e7eb; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+/* ── Header ────────────────────────────────────────────────────────────── */
+header {
+  flex-shrink: 0;
+  background: rgba(17,24,39,0.97);
+  border-bottom: 1px solid #2d3748;
+  padding: 7px 14px;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap; z-index: 20;
+}
+header h1 { font-size: 0.95em; color: #fbbf24; white-space: nowrap; }
+#fileBtn {
+  background: #374151; border: 1px solid #4b5563; color: #e5e7eb;
+  padding: 4px 10px; border-radius: 5px; cursor: pointer; font-size: 0.78em;
+}
+#fileBtn:hover { background: #4b5563; }
+#fileInput { display: none; }
+#statsEl { font-size: 0.7em; color: #6b7280; }
+
+.ctrl { display: flex; align-items: center; gap: 5px; font-size: 0.72em; color: #9ca3af; }
+.ctrl input[type=range] { width: 70px; accent-color: #fbbf24; }
+.ctrl label { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+.btn-sm {
+  background: #374151; border: 1px solid #4b5563; color: #e5e7eb;
+  padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em;
+}
+.btn-sm:hover { background: #4b5563; }
+.ctrl-sep { color: #374151; }
+
+/* ── Main layout ───────────────────────────────────────────────────────── */
+.main { flex: 1; display: flex; overflow: hidden; position: relative; }
+
+/* ── Edit Panel ────────────────────────────────────────────────────────── */
+#panel {
+  width: 280px; min-width: 280px;
+  background: #1f2937;
+  border-right: 1px solid #374151;
+  display: flex; flex-direction: column;
+  transform: translateX(-280px);
+  transition: transform 0.25s ease;
+  overflow-y: auto; z-index: 10;
+}
+#panel.open { transform: translateX(0); }
+
+#panel h2 {
+  font-size: 0.85em; color: #fbbf24; padding: 12px 14px 8px;
+  border-bottom: 1px solid #374151; display: flex; justify-content: space-between; align-items: center;
+}
+#panel h2 button { background: none; border: none; color: #6b7280; cursor: pointer; font-size: 1.1em; }
+#panel h2 button:hover { color: #e5e7eb; }
+
+.section-title {
+  font-size: 0.68em; color: #6b7280; letter-spacing: 1px; text-transform: uppercase;
+  padding: 10px 14px 4px;
+}
+.field { padding: 4px 14px; }
+.field label { display: block; font-size: 0.7em; color: #9ca3af; margin-bottom: 2px; }
+.field input, .field select, .field textarea {
+  width: 100%; background: #111827; border: 1px solid #374151;
+  color: #e5e7eb; border-radius: 4px; padding: 5px 7px; font-size: 0.78em;
+  font-family: inherit;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none; border-color: #fbbf24;
+}
+.field textarea { resize: vertical; min-height: 56px; }
+
+.link-section { padding: 4px 14px; }
+.link-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #111827; border: 1px solid #374151; border-radius: 4px;
+  padding: 4px 8px; margin-bottom: 3px; font-size: 0.76em; cursor: pointer;
+}
+.link-row:hover { border-color: #4b5563; }
+.link-row .link-name { flex: 1; color: #d1d5db; }
+.link-row .link-rel { font-size: 0.7em; color: #6b7280; margin-right: 6px; }
+.link-row button { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.9em; }
+.link-row button:hover { color: #fca5a5; }
+.add-link-btn {
+  width: 100%; background: #111827; border: 1px dashed #374151;
+  color: #6b7280; border-radius: 4px; padding: 4px; cursor: pointer;
+  font-size: 0.74em; margin-top: 2px; text-align: center;
+}
+.add-link-btn:hover { border-color: #fbbf24; color: #fbbf24; }
+
+.panel-actions {
+  padding: 10px 14px; border-top: 1px solid #374151; margin-top: auto;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.btn-primary {
+  width: 100%; padding: 7px; border-radius: 5px; cursor: pointer;
+  font-size: 0.8em; font-family: inherit; border: none;
+}
+.btn-save   { background: #1d4ed8; color: white; }
+.btn-save:hover   { background: #2563eb; }
+.btn-export { background: #065f46; color: white; }
+.btn-export:hover { background: #047857; }
+.btn-add-person { background: #4b5563; color: #e5e7eb; border: 1px solid #6b7280; }
+.btn-add-person:hover { background: #6b7280; }
+
+/* ── Canvas area ───────────────────────────────────────────────────────── */
+#canvas-wrap { flex: 1; position: relative; overflow: hidden; }
+#canvas { width: 100%; height: 100%; display: block; cursor: grab; }
+#canvas:active { cursor: grabbing; }
+
+/* ── Search overlay ────────────────────────────────────────────────────── */
+#searchOverlay {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(17,24,39,0.85); z-index: 15;
+  pointer-events: none;
+}
+#searchOverlay.hidden { display: none; }
+#searchOverlay p { color: #9ca3af; font-size: 0.85em; }
+
+/* ── Header search ─────────────────────────────────────────────────────── */
+#headerSearchWrap { position: relative; }
+#searchInput {
+  background: #1f2937; border: 1.5px solid #4b5563;
+  color: #e5e7eb; border-radius: 6px; padding: 4px 10px;
+  font-size: 0.78em; font-family: inherit; width: 180px;
+}
+#searchInput:focus { outline: none; border-color: #fbbf24; }
+#searchDropdown {
+  position: absolute; top: 100%; left: 0; right: 0;
+  background: #1f2937; border: 1px solid #374151; border-top: none;
+  border-radius: 0 0 6px 6px; max-height: 260px; overflow-y: auto; z-index: 100;
+  min-width: 260px;
+}
+.search-item {
+  padding: 7px 14px; cursor: pointer; font-size: 0.82em;
+  border-bottom: 1px solid #374151;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.search-item:hover { background: #374151; }
+.search-item .s-id { color: #6b7280; font-size: 0.85em; }
+
+/* ── Inline link search (inside panel) ────────────────────────────────── */
+#linkSearchModal {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  z-index: 50; display: flex; align-items: center; justify-content: center;
+}
+#linkSearchModal.hidden { display: none; }
+#linkSearchBox {
+  background: #1f2937; border: 1px solid #374151; border-radius: 10px;
+  padding: 16px; width: 320px;
+}
+#linkSearchBox h3 { font-size: 0.85em; color: #fbbf24; margin-bottom: 10px; }
+#linkSearchBox input {
+  width: 100%; background: #111827; border: 1px solid #374151;
+  color: #e5e7eb; border-radius: 5px; padding: 6px 10px; font-size: 0.82em;
+  font-family: inherit; margin-bottom: 6px;
+}
+#linkSearchBox input:focus { outline: none; border-color: #fbbf24; }
+#linkSearchResults { max-height: 180px; overflow-y: auto; }
+#linkSearchBox .cancel-btn {
+  margin-top: 8px; width: 100%; padding: 5px; background: #374151;
+  border: none; color: #9ca3af; border-radius: 5px; cursor: pointer; font-size: 0.78em;
+}
+
+/* ── Tooltip ───────────────────────────────────────────────────────────── */
+#tip {
+  position: fixed; z-index: 30; pointer-events: none;
+  background: rgba(17,24,39,0.97); border: 1px solid #4b5563;
+  border-radius: 7px; padding: 9px 13px; font-size: 0.78em;
+  max-width: 240px; display: none;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.7);
+}
+#tip .t-name { font-weight: bold; color: #fbbf24; margin-bottom: 3px; }
+#tip .t-row  { color: #9ca3af; margin-top: 2px; }
+#tip .t-row span { color: #e5e7eb; }
+
+/* ── Legend ────────────────────────────────────────────────────────────── */
+#legend {
+  position: absolute; bottom: 12px; right: 12px; z-index: 10;
+  background: rgba(17,24,39,0.88); border: 1px solid #374151;
+  border-radius: 7px; padding: 8px 12px; font-size: 0.7em; color: #9ca3af;
+}
+#legend h4 { color: #fbbf24; margin-bottom: 5px; }
+.leg { display: flex; align-items: center; gap: 6px; margin-top: 3px; }
+.ld { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.ll { width: 22px; height: 3px; flex-shrink: 0; }
+.ll-d { width: 22px; height: 0; border-top: 2px dashed; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>GEDCOM Editor</h1>
+  <button class="btn-sm" id="fileBtn">📂 <span data-i18n="openFile">Open GEDCOM</span></button>
+  <input type="file" id="fileInput" accept=".ged">
+  <span id="statsEl" data-i18n-attr="noFile">No file loaded</span>
+  <span class="ctrl-sep">|</span>
+  <div class="ctrl">Hops: <input type="range" id="slHops" min="1" max="6" value="2">
+    <span id="hopsVal">2</span></div>
+  <div class="ctrl"><span data-i18n="force">Force</span>: <input type="range" id="slForce" min="-400" max="-20" value="-180"></div>
+  <div class="ctrl"><span data-i18n="link">Link</span>: <input type="range" id="slLink" min="30" max="200" value="80"></div>
+  <div class="ctrl"><label><input type="checkbox" id="chkNames" checked> <span data-i18n="names">Names</span></label></div>
+  <div id="headerSearchWrap" class="ctrl">
+    <input type="text" id="searchInput" data-i18n-placeholder="searchPerson" placeholder="Search person…" autocomplete="off">
+    <div id="searchDropdown"></div>
+  </div>
+  <button class="btn-sm" id="btnReset" data-i18n="reset">Reset</button>
+  <span class="ctrl-sep">|</span>
+  <select id="langSel" class="btn-sm" title="Language / Sprache / Idioma" style="padding:3px 6px">
+    <option value="en" selected>EN</option>
+    <option value="de">DE</option>
+    <option value="es">ES</option>
+  </select>
+</header>
+
+<div class="main">
+  <!-- ── Edit Panel ── -->
+  <div id="panel">
+    <h2>
+      <span id="panelTitle" data-i18n="person">Person</span>
+      <button id="btnClosePanel" data-i18n-title="close">✕</button>
+    </h2>
+
+    <div class="section-title" data-i18n="personalData">Personal data</div>
+    <div class="field"><label data-i18n="givenName">Given name (GIVN)</label><input id="fGivn" type="text"></div>
+    <div class="field"><label data-i18n="surname">Surname (SURN)</label><input id="fSurn" type="text"></div>
+    <div class="field">
+      <label data-i18n="sex">Sex</label>
+      <select id="fSex">
+        <option value="M" data-i18n="male">Male (M)</option>
+        <option value="F" data-i18n="female">Female (F)</option>
+        <option value="U" data-i18n="unknown">Unknown (U)</option>
+      </select>
+    </div>
+
+    <div class="section-title" data-i18n="birth">Birth</div>
+    <div class="field"><label data-i18n="date">Date (DATE)</label><input id="fBirtDate" type="text" placeholder="e.g. 18 DEC 1953"></div>
+    <div class="field"><label data-i18n="place">Place (PLAC)</label><input id="fBirtPlac" type="text"></div>
+
+    <div class="section-title" data-i18n="death">Death</div>
+    <div class="field"><label data-i18n="date">Date (DATE)</label><input id="fDeatDate" type="text"></div>
+    <div class="field"><label data-i18n="place">Place (PLAC)</label><input id="fDeatPlac" type="text"></div>
+
+    <div class="section-title" data-i18n="note">Note</div>
+    <div class="field"><textarea id="fNote" rows="3"></textarea></div>
+
+    <div class="section-title" data-i18n="spouses">Spouses</div>
+    <div class="link-section" id="spouseList"></div>
+    <div style="padding:0 14px 6px">
+      <button class="add-link-btn" onclick="openLinkSearch('spouse')" data-i18n="addSpouse">+ Add spouse</button>
+    </div>
+
+    <div class="section-title" data-i18n="children">Children</div>
+    <div class="link-section" id="childList"></div>
+    <div style="padding:0 14px 6px">
+      <button class="add-link-btn" onclick="openLinkSearch('child')" data-i18n="addChild">+ Add child</button>
+    </div>
+
+    <div class="section-title" data-i18n="parents">Parents</div>
+    <div class="link-section" id="parentList"></div>
+    <div style="padding:0 14px 6px">
+      <button class="add-link-btn" onclick="openLinkSearch('parent')" data-i18n="addParent">+ Add parent</button>
+    </div>
+
+    <div class="panel-actions">
+      <button class="btn-primary btn-save" onclick="savePersonEdits()" data-i18n="savePerson">💾 Save person</button>
+      <button class="btn-primary btn-add-person" onclick="addNewPerson()" data-i18n="newPerson">➕ New person</button>
+      <button class="btn-primary btn-export" onclick="exportGED()" data-i18n="exportGed">⬇ Export GEDCOM</button>
+    </div>
+  </div>
+
+  <!-- ── Canvas ── -->
+  <div id="canvas-wrap">
+    <svg id="canvas"></svg>
+
+    <!-- Search overlay shown before any selection -->
+    <div id="searchOverlay">
+      <p data-i18n="overlayHint">Load a GEDCOM file and select a person to start</p>
+    </div>
+
+    <div id="legend">
+      <h4 data-i18n="legend">Legend</h4>
+      <div class="leg"><div class="ld" style="background:#3b82f6;border:2px solid #1d4ed8"></div> <span data-i18n="male">Male</span></div>
+      <div class="leg"><div class="ld" style="background:#ec4899;border:2px solid #9d174d"></div> <span data-i18n="female">Female</span></div>
+      <div class="leg"><div class="ld" style="background:#6b7280;border:2px solid #374151"></div> <span data-i18n="unknown">Unknown</span></div>
+      <div class="leg" style="margin-top:5px"><div class="ll" style="background:#d97706"></div> <span data-i18n="marriage">Marriage</span></div>
+      <div class="leg"><div class="ll-d" style="border-color:#34d399"></div> <span data-i18n="parentChild">Parent→Child</span></div>
+      <div class="leg"><div class="ll-d" style="border-color:#a78bfa;border-top-style:dotted"></div> <span data-i18n="sibling">Sibling</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Tooltip -->
+<div id="tip"></div>
+
+<!-- Link search modal -->
+<div id="linkSearchModal" class="hidden">
+  <div id="linkSearchBox">
+    <h3 id="linkSearchTitle" data-i18n="searchPerson">Search person</h3>
+    <input type="text" id="linkSearchInput" data-i18n-placeholder="nameOrId" placeholder="Name or ID…" autocomplete="off">
+    <div id="linkSearchResults"></div>
+    <button class="cancel-btn" onclick="closeLinkSearch()" data-i18n="cancel">Cancel</button>
+  </div>
+</div>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script>
+// ══════════════════════════════════════════════════════════════════
+// INTERNATIONALISATION
+// ══════════════════════════════════════════════════════════════════
+const LANGS = {
+  en: {
+    openFile:'Open GEDCOM', noFile:'No file loaded',
+    force:'Force', link:'Link dist', names:'Names', reset:'Reset',
+    person:'Person', close:'Close',
+    personalData:'Personal data', givenName:'Given name (GIVN)', surname:'Surname (SURN)',
+    sex:'Sex', male:'Male (M)', female:'Female (F)', unknown:'Unknown (U)',
+    birth:'Birth', death:'Death', date:'Date (DATE)', place:'Place (PLAC)', note:'Note',
+    spouses:'Spouses', children:'Children', parents:'Parents',
+    addSpouse:'+ Add spouse', addChild:'+ Add child', addParent:'+ Add parent',
+    savePerson:'💾 Save person', newPerson:'➕ New person', exportGed:'⬇ Export GEDCOM',
+    overlayHint:'Load a GEDCOM file and select a person to start',
+    searchPerson:'Search person', nameOrId:'Name or ID…', cancel:'Cancel',
+    legend:'Legend', marriage:'Marriage', parentChild:'Parent→Child', sibling:'Sibling',
+    searchPlaceholder:'Search person…',
+    born:'Born', died:'Died', place2:'Place',
+    unknown2:'(unknown)',
+    statsTemplate:(f,np,nf) => `${f} · ${np} persons · ${nf} families`,
+    newGivn:'New', newSurn:'Person',
+    removeLink:'Remove link',
+    addSpouseTitle:'Add spouse', addChildTitle:'Add child', addParentTitle:'Add parent',
+  },
+  de: {
+    openFile:'GEDCOM öffnen', noFile:'Keine Datei geladen',
+    force:'Kraft', link:'Abstand', names:'Namen', reset:'Zurücksetzen',
+    person:'Person', close:'Schließen',
+    personalData:'Persönliche Daten', givenName:'Vorname (GIVN)', surname:'Nachname (SURN)',
+    sex:'Geschlecht', male:'Männlich (M)', female:'Weiblich (F)', unknown:'Unbekannt (U)',
+    birth:'Geburt', death:'Tod', date:'Datum (DATE)', place:'Ort (PLAC)', note:'Notiz',
+    spouses:'Ehepartner', children:'Kinder', parents:'Eltern',
+    addSpouse:'+ Ehepartner hinzufügen', addChild:'+ Kind hinzufügen', addParent:'+ Elternteil hinzufügen',
+    savePerson:'💾 Person speichern', newPerson:'➕ Neue Person', exportGed:'⬇ GEDCOM exportieren',
+    overlayHint:'Lade eine GEDCOM-Datei und wähle eine Person aus',
+    searchPerson:'Person suchen', nameOrId:'Name oder ID…', cancel:'Abbrechen',
+    legend:'Legende', marriage:'Ehe', parentChild:'Eltern→Kind', sibling:'Geschwister',
+    searchPlaceholder:'Person suchen…',
+    born:'Geb.', died:'Gest.', place2:'Ort',
+    unknown2:'(unbekannt)',
+    statsTemplate:(f,np,nf) => `${f} · ${np} Personen · ${nf} Familien`,
+    newGivn:'Neue', newSurn:'Person',
+    removeLink:'Verknüpfung entfernen',
+    addSpouseTitle:'Ehepartner hinzufügen', addChildTitle:'Kind hinzufügen', addParentTitle:'Elternteil hinzufügen',
+  },
+  es: {
+    openFile:'Abrir GEDCOM', noFile:'Sin archivo cargado',
+    force:'Fuerza', link:'Enlace', names:'Nombres', reset:'Reiniciar',
+    person:'Persona', close:'Cerrar',
+    personalData:'Datos personales', givenName:'Nombre (GIVN)', surname:'Apellido (SURN)',
+    sex:'Sexo', male:'Masculino (M)', female:'Femenino (F)', unknown:'Desconocido (U)',
+    birth:'Nacimiento', death:'Fallecimiento', date:'Fecha (DATE)', place:'Lugar (PLAC)', note:'Nota',
+    spouses:'Cónyuges', children:'Hijos/as', parents:'Padres',
+    addSpouse:'+ Añadir cónyuge', addChild:'+ Añadir hijo/a', addParent:'+ Añadir padre/madre',
+    savePerson:'💾 Guardar persona', newPerson:'➕ Nueva persona', exportGed:'⬇ Exportar GEDCOM',
+    overlayHint:'Carga un archivo GEDCOM y selecciona una persona para empezar',
+    searchPerson:'Buscar persona', nameOrId:'Nombre o ID…', cancel:'Cancelar',
+    legend:'Leyenda', marriage:'Matrimonio', parentChild:'Padre→Hijo', sibling:'Hermano/a',
+    searchPlaceholder:'Buscar persona…',
+    born:'Nac.', died:'Fall.', place2:'Lugar',
+    unknown2:'(desconocido)',
+    statsTemplate:(f,np,nf) => `${f} · ${np} personas · ${nf} familias`,
+    newGivn:'Nueva', newSurn:'Persona',
+    removeLink:'Quitar enlace',
+    addSpouseTitle:'Añadir cónyuge', addChildTitle:'Añadir hijo/a', addParentTitle:'Añadir padre/madre',
+  }
+};
+
+let lang = 'en';
+function t(key) { return (LANGS[lang] || LANGS.en)[key] || key; }
+
+function applyLang() {
+  const L = LANGS[lang] || LANGS.en;
+  document.getElementById('htmlRoot').lang = lang;
+  // text content
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (L[key] !== undefined) el.textContent = L[key];
+  });
+  // placeholder attributes
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (key === 'searchPerson') el.placeholder = L.searchPlaceholder;
+    else if (L[key] !== undefined) el.placeholder = L[key];
+  });
+  // title attributes
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    const key = el.getAttribute('data-i18n-title');
+    if (L[key] !== undefined) el.title = L[key];
+  });
+  // statsEl: only update if it shows the noFile message
+  const statsEl = document.getElementById('statsEl');
+  if (statsEl.getAttribute('data-i18n-attr') === 'noFile') statsEl.textContent = L.noFile;
+}
+
+document.getElementById('langSel').addEventListener('change', function() {
+  lang = this.value;
+  applyLang();
+  // re-render panel if open
+  if (selectedId) openPanel(selectedId);
+});
+
+// Apply default language on load
+applyLang();
+
+// ══════════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════════
+let persons   = {};   // id → person object
+let families  = {};   // id → family object
+let filename  = 'export.ged';
+let selectedId = null;
+let nextIndiN  = 1;
+let nextFamN   = 1;
+let linkSearchMode = null;  // 'spouse' | 'child' | 'parent'
+
+// ══════════════════════════════════════════════════════════════════
+// GEDCOM PARSER
+// ══════════════════════════════════════════════════════════════════
+function parseGED(text) {
+  persons = {}; families = {};
+  const lines = text.split(/\r?\n/);
+  let curIndi = null, curFam = null;
+  let inBirt = false, inDeat = false, inMarr = false, inNote = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i];
+    const parts = raw.trimEnd().split(' ');
+    if (!parts.length || parts[0] === '') continue;
+    const lvl = parseInt(parts[0]);
+    if (isNaN(lvl)) continue;
+    const rest = parts.slice(1);
+    const tag  = rest[0] || '';
+    const val  = rest.slice(1).join(' ');
+
+    if (lvl === 0) {
+      curIndi = curFam = null;
+      inBirt = inDeat = inMarr = inNote = false;
+      if (rest.length >= 2) {
+        const xref = rest[0], recTag = rest[1];
+        if (recTag === 'INDI') {
+          curIndi = xref;
+          persons[xref] = { id: xref, givn:'', surn:'', sex:'U',
+            birth_date:'', birth_plac:'', deat_date:'', deat_plac:'',
+            note:'', fams:[], famc:[], raw_lines: [raw] };
+        } else if (recTag === 'FAM') {
+          curFam = xref;
+          families[xref] = { id: xref, husb:null, wife:null, chil:[],
+            marr_date:'', marr_plac:'', raw_lines: [raw] };
+        }
+      }
+      continue;
+    }
+
+    // accumulate raw lines
+    if (curIndi) persons[curIndi].raw_lines.push(raw);
+    if (curFam)  families[curFam].raw_lines.push(raw);
+
+    if (curIndi) {
+      if (lvl === 1) { inBirt=false; inDeat=false; inNote=false; }
+      if (lvl === 1 && tag === 'NAME') {
+        // parse "Given /Surname/"
+        const m = val.match(/^(.*?)\s*\/(.*)\/\s*$/);
+        if (m) { persons[curIndi].givn = m[1].trim(); persons[curIndi].surn = m[2].trim(); }
+        else   { persons[curIndi].givn = val.replace(/\//g,'').trim(); }
+      } else if (lvl === 2 && tag === 'GIVN') { persons[curIndi].givn = val; }
+      else if (lvl === 2 && tag === 'SURN') { persons[curIndi].surn = val; }
+      else if (lvl === 1 && tag === 'SEX')  { persons[curIndi].sex = val || 'U'; }
+      else if (lvl === 1 && tag === 'BIRT') { inBirt = true; }
+      else if (lvl === 2 && inBirt && tag === 'DATE') { persons[curIndi].birth_date = val; }
+      else if (lvl === 2 && inBirt && tag === 'PLAC') { persons[curIndi].birth_plac = val; }
+      else if (lvl === 1 && tag === 'DEAT') { inDeat = true; }
+      else if (lvl === 2 && inDeat && tag === 'DATE') { persons[curIndi].deat_date = val; }
+      else if (lvl === 2 && inDeat && tag === 'PLAC') { persons[curIndi].deat_plac = val; }
+      else if (lvl === 1 && tag === 'NOTE') { persons[curIndi].note = val; inNote = true; }
+      else if (lvl === 2 && inNote && tag === 'CONT') { persons[curIndi].note += '\n' + val; }
+      else if (lvl === 1 && tag === 'FAMS') { persons[curIndi].fams.push(val); }
+      else if (lvl === 1 && tag === 'FAMC') { persons[curIndi].famc.push(val); }
+    }
+
+    if (curFam) {
+      if (lvl === 1) { inMarr = false; }
+      if (lvl === 1 && tag === 'HUSB') { families[curFam].husb = val; }
+      else if (lvl === 1 && tag === 'WIFE') { families[curFam].wife = val; }
+      else if (lvl === 1 && tag === 'CHIL') { families[curFam].chil.push(val); }
+      else if (lvl === 1 && tag === 'MARR') { inMarr = true; }
+      else if (lvl === 2 && inMarr && tag === 'DATE') { families[curFam].marr_date = val; }
+      else if (lvl === 2 && inMarr && tag === 'PLAC') { families[curFam].marr_plac = val; }
+    }
+  }
+
+  // figure out next available IDs
+  const indiNums = Object.keys(persons).map(x => parseInt(x.replace(/\D/g,''))).filter(n=>!isNaN(n));
+  const famNums  = Object.keys(families).map(x => parseInt(x.replace(/\D/g,''))).filter(n=>!isNaN(n));
+  nextIndiN = indiNums.length ? Math.max(...indiNums)+1 : 1;
+  nextFamN  = famNums.length  ? Math.max(...famNums)+1  : 1;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// GRAPH HELPERS
+// ══════════════════════════════════════════════════════════════════
+function personName(p) {
+  if (!p) return t('unknown2');
+  const g = p.givn || '', s = p.surn || '';
+  return (g + (s ? ' ' + s : '')).trim() || p.id;
+}
+
+function buildGraph() {
+  const nodes = Object.values(persons).map(p => ({
+    id: p.id, name: personName(p), givn: p.givn||'', surn: p.surn||'', sex: p.sex,
+    birth: p.birth_date, place: p.birth_plac,
+    deat: p.deat_date
+  }));
+  const links = [];
+  for (const fam of Object.values(families)) {
+    if (fam.husb && fam.wife)
+      links.push({ source: fam.husb, target: fam.wife, type: 'marriage', famId: fam.id });
+    for (const child of fam.chil) {
+      if (fam.husb) links.push({ source: fam.husb, target: child, type: 'parent', famId: fam.id });
+      if (fam.wife) links.push({ source: fam.wife, target: child, type: 'parent', famId: fam.id });
+    }
+    // sibling links between all children in same family
+    for (let i = 0; i < fam.chil.length - 1; i++) {
+      for (let j = i + 1; j < fam.chil.length; j++) {
+        links.push({ source: fam.chil[i], target: fam.chil[j], type: 'sibling', famId: fam.id });
+      }
+    }
+  }
+  return { nodes, links };
+}
+
+// Adjacency list for BFS
+function buildAdj() {
+  const adj = {};
+  for (const id of Object.keys(persons)) adj[id] = new Set();
+  for (const fam of Object.values(families)) {
+    const members = [fam.husb, fam.wife, ...fam.chil].filter(Boolean);
+    for (const a of members) for (const b of members) {
+      if (a !== b) { if (!adj[a]) adj[a] = new Set(); adj[a].add(b); }
+    }
+  }
+  return adj;
+}
+
+function getNeighbors(personId, hops) {
+  const adj = buildAdj();
+  const visited = new Set([personId]);
+  let frontier = [personId];
+  for (let h = 0; h < hops; h++) {
+    const next = [];
+    for (const id of frontier) {
+      for (const nb of (adj[id] || [])) {
+        if (!visited.has(nb)) { visited.add(nb); next.push(nb); }
+      }
+    }
+    frontier = next;
+  }
+  return visited;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// D3 NETWORK
+// ══════════════════════════════════════════════════════════════════
+const colFill   = { M:'#3b82f6', F:'#ec4899', U:'#6b7280' };
+const colStroke = { M:'#1d4ed8', F:'#9d174d', U:'#374151' };
+const tip = document.getElementById('tip');
+
+const svgEl = document.getElementById('canvas');
+const svg = d3.select('#canvas');
+let W = svgEl.clientWidth || window.innerWidth - 280;
+let H = svgEl.clientHeight || window.innerHeight - 48;
+svg.attr('viewBox', `0 0 ${W} ${H}`).attr('preserveAspectRatio','xMidYMid meet');
+
+const defs = svg.append('defs');
+defs.append('marker').attr('id','arr')
+  .attr('viewBox','0 -4 8 8').attr('refX',16).attr('refY',0)
+  .attr('markerWidth',5).attr('markerHeight',5).attr('orient','auto')
+  .append('path').attr('d','M0,-4L8,0L0,4').attr('fill','#34d399').attr('opacity',0.8);
+
+const gRoot = svg.append('g');
+const zoom = d3.zoom().scaleExtent([0.05,8])
+  .on('zoom', e => gRoot.attr('transform', e.transform));
+svg.call(zoom);
+
+let simulation = d3.forceSimulation([])
+  .force('link', d3.forceLink([]).id(d=>d.id).distance(80))
+  .force('charge', d3.forceManyBody().strength(-180))
+  .force('center', d3.forceCenter(W/2, H/2))
+  .force('collision', d3.forceCollide(14));
+
+let linkSel, nodeGroup, labelSel;
+
+function renderSubgraph(personId, hops) {
+  const { nodes: allNodes, links: allLinks } = buildGraph();
+  let nodes, links;
+
+  if (personId) {
+    const visible = getNeighbors(personId, hops);
+    nodes = allNodes.filter(n => visible.has(n.id)).map(d => ({...d}));
+    const nodeIds = new Set(nodes.map(n => n.id));
+    links = allLinks.filter(l =>
+      nodeIds.has(l.source?.id || l.source) && nodeIds.has(l.target?.id || l.target)
+    ).map(d => ({...d}));
+  } else {
+    nodes = allNodes.map(d => ({...d}));
+    links = allLinks.map(d => ({...d}));
+  }
+
+  gRoot.selectAll('*').remove();
+
+  // Links
+  linkSel = gRoot.append('g').selectAll('line').data(links).join('line')
+    .attr('stroke', d => d.type === 'marriage' ? '#d97706' : d.type === 'sibling' ? '#a78bfa' : '#34d399')
+    .attr('stroke-width', d => d.type === 'marriage' ? 2 : d.type === 'sibling' ? 1 : 1.4)
+    .attr('stroke-dasharray', d => d.type === 'parent' ? '5,3' : d.type === 'sibling' ? '2,4' : null)
+    .attr('marker-end', d => d.type === 'parent' ? 'url(#arr)' : null)
+    .attr('opacity', 0.65);
+
+  // Nodes
+  nodeGroup = gRoot.append('g').selectAll('g.node').data(nodes).join('g')
+    .attr('class','node').style('cursor','pointer');
+
+  nodeGroup.append('circle')
+    .attr('r', d => d.id === selectedId ? 10 : 6)
+    .attr('fill', d => colFill[d.sex] || colFill.U)
+    .attr('stroke', d => d.id === selectedId ? '#fbbf24' : (colStroke[d.sex] || colStroke.U))
+    .attr('stroke-width', d => d.id === selectedId ? 3 : 1.5);
+
+  // Gold ring for selected
+  nodeGroup.filter(d => d.id === selectedId)
+    .append('circle').attr('r', 14)
+    .attr('fill','none').attr('stroke','#fbbf24').attr('stroke-width',2).attr('opacity',0.5);
+
+  // Dead marker (small cross)
+  nodeGroup.filter(d => d.deat).append('text')
+    .attr('text-anchor','middle').attr('dy','0.35em')
+    .attr('font-size','7px').attr('fill','#f87171').attr('pointer-events','none')
+    .text('✝');
+
+  labelSel = nodeGroup.append('text')
+    .attr('text-anchor','middle')
+    .attr('font-size','9px').attr('fill','#d1d5db').attr('pointer-events','none')
+    .attr('visibility', document.getElementById('chkNames').checked ? 'visible' : 'hidden');
+
+  // Given name (line 1)
+  labelSel.append('tspan')
+    .attr('x', 0).attr('dy', d => (d.id === selectedId ? 10 : 6) + 10)
+    .text(d => d.givn || d.name);
+
+  // Surname (line 2, only if present)
+  labelSel.filter(d => d.surn)
+    .append('tspan')
+    .attr('x', 0).attr('dy', '1.1em')
+    .attr('font-weight', 'bold')
+    .text(d => d.surn);
+
+  // Drag
+  nodeGroup.call(d3.drag()
+    .on('start', (e,d) => { if(!e.active) simulation.alphaTarget(0.3).restart(); d.fx=d.x; d.fy=d.y; })
+    .on('drag',  (e,d) => { d.fx=e.x; d.fy=e.y; })
+    .on('end',   (e,d) => { if(!e.active) simulation.alphaTarget(0); })
+  );
+
+  // Click → select + open panel
+  nodeGroup.on('click', (e,d) => { e.stopPropagation(); selectPerson(d.id); });
+
+  // Tooltip
+  nodeGroup
+    .on('mouseover', (e,d) => {
+      tip.innerHTML = [
+        `<div class="t-name">${d.name}</div>`,
+        d.birth ? `<div class="t-row">${t('born')}: <span>${d.birth}</span></div>` : '',
+        d.place ? `<div class="t-row">${t('place2')}: <span>${d.place}</span></div>` : '',
+        d.deat  ? `<div class="t-row">${t('died')}: <span>${d.deat}</span></div>` : '',
+        `<div class="t-row">ID: <span>${d.id}</span></div>`,
+      ].join('');
+      tip.style.display = 'block';
+    })
+    .on('mousemove', e => { tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-10)+'px'; })
+    .on('mouseout',  () => { tip.style.display='none'; });
+
+  // Simulation
+  simulation.nodes(nodes);
+  simulation.force('link', d3.forceLink(links).id(d=>d.id)
+    .distance(+document.getElementById('slLink').value));
+  simulation.force('charge').strength(+document.getElementById('slForce').value);
+  simulation.force('center', d3.forceCenter(W/2, H/2));
+  simulation.alpha(1).restart();
+
+  simulation.on('tick', () => {
+    linkSel
+      .attr('x1',d=>d.source.x).attr('y1',d=>d.source.y)
+      .attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+    nodeGroup.attr('transform', d=>`translate(${d.x},${d.y})`);
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// SELECTION & PANEL
+// ══════════════════════════════════════════════════════════════════
+function selectPerson(id) {
+  selectedId = id;
+  const hops = +document.getElementById('slHops').value;
+  document.getElementById('searchOverlay').classList.add('hidden');
+  renderSubgraph(id, hops);
+  openPanel(id);
+}
+
+function openPanel(id) {
+  const p = persons[id];
+  if (!p) return;
+  document.getElementById('panelTitle').textContent = personName(p);
+  document.getElementById('fGivn').value     = p.givn || '';
+  document.getElementById('fSurn').value     = p.surn || '';
+  document.getElementById('fSex').value      = p.sex  || 'U';
+  document.getElementById('fBirtDate').value = p.birth_date || '';
+  document.getElementById('fBirtPlac').value = p.birth_plac || '';
+  document.getElementById('fDeatDate').value = p.deat_date  || '';
+  document.getElementById('fDeatPlac').value = p.deat_plac  || '';
+  document.getElementById('fNote').value     = p.note || '';
+  renderLinks(id);
+  document.getElementById('panel').classList.add('open');
+}
+
+function renderLinks(id) {
+  const p = persons[id];
+  // Spouses
+  const spouseDiv = document.getElementById('spouseList');
+  spouseDiv.innerHTML = '';
+  for (const famId of p.fams) {
+    const fam = families[famId];
+    if (!fam) continue;
+    const spouseId = fam.husb === id ? fam.wife : fam.husb;
+    const sp = spouseId ? persons[spouseId] : null;
+    const row = document.createElement('div');
+    row.className = 'link-row';
+    row.innerHTML = `<span class="link-name">${sp ? personName(sp) : '–'}</span>
+      <span class="link-rel">${fam.marr_date||''}</span>
+      <button title="${t('removeLink')}" onclick="removeSpouseLink('${famId}','${id}');event.stopPropagation()">✕</button>`;
+    if (sp) row.addEventListener('click', () => selectPerson(spouseId));
+    spouseDiv.appendChild(row);
+  }
+  // Children
+  const childDiv = document.getElementById('childList');
+  childDiv.innerHTML = '';
+  for (const famId of p.fams) {
+    const fam = families[famId];
+    if (!fam) continue;
+    for (const cId of fam.chil) {
+      const cp = persons[cId];
+      const row = document.createElement('div');
+      row.className = 'link-row';
+      row.innerHTML = `<span class="link-name">${cp ? personName(cp) : cId}</span>
+        <button title="${t('removeLink')}" onclick="removeChildLink('${famId}','${cId}');event.stopPropagation()">✕</button>`;
+      if (cp) row.addEventListener('click', () => selectPerson(cId));
+      childDiv.appendChild(row);
+    }
+  }
+  // Parents
+  const parentDiv = document.getElementById('parentList');
+  parentDiv.innerHTML = '';
+  for (const famId of p.famc) {
+    const fam = families[famId];
+    if (!fam) continue;
+    for (const pid of [fam.husb, fam.wife].filter(Boolean)) {
+      const pp = persons[pid];
+      const row = document.createElement('div');
+      row.className = 'link-row';
+      row.innerHTML = `<span class="link-name">${pp ? personName(pp) : pid}</span>
+        <button title="${t('removeLink')}" onclick="removeParentLink('${famId}','${id}');event.stopPropagation()">✕</button>`;
+      if (pp) row.addEventListener('click', () => selectPerson(pid));
+      parentDiv.appendChild(row);
+    }
+  }
+}
+
+document.getElementById('btnClosePanel').onclick = () => {
+  document.getElementById('panel').classList.remove('open');
+};
+
+// ══════════════════════════════════════════════════════════════════
+// SAVE PERSON EDITS
+// ══════════════════════════════════════════════════════════════════
+function savePersonEdits() {
+  if (!selectedId || !persons[selectedId]) return;
+  const p = persons[selectedId];
+  p.givn       = document.getElementById('fGivn').value.trim();
+  p.surn       = document.getElementById('fSurn').value.trim();
+  p.sex        = document.getElementById('fSex').value;
+  p.birth_date = document.getElementById('fBirtDate').value.trim();
+  p.birth_plac = document.getElementById('fBirtPlac').value.trim();
+  p.deat_date  = document.getElementById('fDeatDate').value.trim();
+  p.deat_plac  = document.getElementById('fDeatPlac').value.trim();
+  p.note       = document.getElementById('fNote').value;
+  document.getElementById('panelTitle').textContent = personName(p);
+  renderSubgraph(selectedId, +document.getElementById('slHops').value);
+  updateStatsEl();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ADD NEW PERSON
+// ══════════════════════════════════════════════════════════════════
+function addNewPerson() {
+  const id = `@I${String(nextIndiN).padStart(4,'0')}@`;
+  nextIndiN++;
+  persons[id] = { id, givn:t('newGivn'), surn:t('newSurn'), sex:'U',
+    birth_date:'', birth_plac:'', deat_date:'', deat_plac:'',
+    note:'', fams:[], famc:[], raw_lines:[] };
+  updateStatsEl();
+  selectPerson(id);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// LINK EDITING
+// ══════════════════════════════════════════════════════════════════
+function newFamId() {
+  const id = `@F${String(nextFamN).padStart(4,'0')}@`;
+  nextFamN++;
+  families[id] = { id, husb:null, wife:null, chil:[], marr_date:'', marr_plac:'', raw_lines:[] };
+  return id;
+}
+
+function findOrCreateCoupleFam(idA, idB) {
+  // look for existing FAM with both as husb/wife
+  for (const fam of Object.values(families)) {
+    if ((fam.husb===idA && fam.wife===idB) || (fam.husb===idB && fam.wife===idA)) return fam.id;
+  }
+  return newFamId();
+}
+
+function addSpouse(personId, spouseId) {
+  const famId = findOrCreateCoupleFam(personId, spouseId);
+  const fam = families[famId];
+  const pa = persons[personId], pb = persons[spouseId];
+  if (!fam.husb && !fam.wife) {
+    fam.husb = (pa.sex === 'F') ? spouseId : personId;
+    fam.wife = (pa.sex === 'F') ? personId : spouseId;
+  } else if (!fam.husb) { fam.husb = personId; }
+  else if (!fam.wife)   { fam.wife = personId; }
+  if (!pa.fams.includes(famId)) pa.fams.push(famId);
+  if (!pb.fams.includes(famId)) pb.fams.push(famId);
+  renderLinks(personId);
+  renderSubgraph(selectedId, +document.getElementById('slHops').value);
+}
+
+function removeSpouseLink(famId, personId) {
+  const fam = families[famId];
+  if (!fam) return;
+  const other = fam.husb === personId ? fam.wife : fam.husb;
+  if (fam.husb === personId) fam.husb = null; else fam.wife = null;
+  persons[personId].fams = persons[personId].fams.filter(f => f !== famId);
+  if (other && persons[other]) persons[other].fams = persons[other].fams.filter(f => f !== famId);
+  cleanFam(famId);
+  renderLinks(personId);
+  renderSubgraph(selectedId, +document.getElementById('slHops').value);
+}
+
+function addChild(parentId, childId) {
+  // find or create a fam where parentId is husb or wife
+  let famId = null;
+  for (const fid of persons[parentId].fams) {
+    const fam = families[fid];
+    if (fam && (fam.husb === parentId || fam.wife === parentId)) { famId = fid; break; }
+  }
+  if (!famId) {
+    famId = newFamId();
+    const fam = families[famId];
+    const p = persons[parentId];
+    if (p.sex === 'F') fam.wife = parentId; else fam.husb = parentId;
+    p.fams.push(famId);
+  }
+  const fam = families[famId];
+  if (!fam.chil.includes(childId)) fam.chil.push(childId);
+  if (!persons[childId].famc.includes(famId)) persons[childId].famc.push(famId);
+  renderLinks(selectedId);
+  renderSubgraph(selectedId, +document.getElementById('slHops').value);
+}
+
+function removeChildLink(famId, childId) {
+  const fam = families[famId];
+  if (!fam) return;
+  fam.chil = fam.chil.filter(c => c !== childId);
+  if (persons[childId]) persons[childId].famc = persons[childId].famc.filter(f => f !== famId);
+  cleanFam(famId);
+  renderLinks(selectedId);
+  renderSubgraph(selectedId, +document.getElementById('slHops').value);
+}
+
+function addParent(childId, parentId) {
+  // find or create famc
+  let famId = null;
+  for (const fid of persons[childId].famc) {
+    const fam = families[fid];
+    if (fam && (!fam.husb || !fam.wife)) { famId = fid; break; }
+  }
+  if (!famId) {
+    famId = newFamId();
+    persons[childId].famc.push(famId);
+  }
+  const fam = families[famId];
+  const pp = persons[parentId];
+  if (!fam.husb && pp.sex !== 'F') { fam.husb = parentId; }
+  else if (!fam.wife && pp.sex === 'F') { fam.wife = parentId; }
+  else if (!fam.husb) { fam.husb = parentId; }
+  else { fam.wife = parentId; }
+  if (!pp.fams.includes(famId)) pp.fams.push(famId);
+  renderLinks(childId);
+  renderSubgraph(selectedId, +document.getElementById('slHops').value);
+}
+
+function removeParentLink(famId, childId) {
+  const fam = families[famId];
+  if (!fam) return;
+  fam.chil = fam.chil.filter(c => c !== childId);
+  persons[childId].famc = persons[childId].famc.filter(f => f !== famId);
+  cleanFam(famId);
+  renderLinks(childId);
+  renderSubgraph(selectedId, +document.getElementById('slHops').value);
+}
+
+function cleanFam(famId) {
+  const fam = families[famId];
+  if (!fam) return;
+  if (!fam.husb && !fam.wife && fam.chil.length === 0) delete families[famId];
+}
+
+// ══════════════════════════════════════════════════════════════════
+// LINK SEARCH MODAL
+// ══════════════════════════════════════════════════════════════════
+function openLinkSearch(mode) {
+  if (!selectedId) return;
+  linkSearchMode = mode;
+  const titles = { spouse: t('addSpouseTitle'), child: t('addChildTitle'), parent: t('addParentTitle') };
+  document.getElementById('linkSearchTitle').textContent = titles[mode];
+  document.getElementById('linkSearchInput').value = '';
+  document.getElementById('linkSearchResults').innerHTML = '';
+  document.getElementById('linkSearchModal').classList.remove('hidden');
+  document.getElementById('linkSearchInput').focus();
+}
+
+function closeLinkSearch() {
+  document.getElementById('linkSearchModal').classList.add('hidden');
+  linkSearchMode = null;
+}
+
+document.getElementById('linkSearchInput').addEventListener('input', function() {
+  const q = this.value.toLowerCase().trim();
+  const results = document.getElementById('linkSearchResults');
+  results.innerHTML = '';
+  if (!q) return;
+  const matches = Object.values(persons)
+    .filter(p => p.id !== selectedId && personName(p).toLowerCase().includes(q))
+    .slice(0, 12);
+  for (const p of matches) {
+    const item = document.createElement('div');
+    item.className = 'search-item';
+    item.innerHTML = `<span>${personName(p)}</span><span class="s-id">${p.id}</span>`;
+    item.addEventListener('click', () => {
+      if (linkSearchMode === 'spouse') addSpouse(selectedId, p.id);
+      else if (linkSearchMode === 'child') addChild(selectedId, p.id);
+      else if (linkSearchMode === 'parent') addParent(selectedId, p.id);
+      closeLinkSearch();
+    });
+    results.appendChild(item);
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════
+// GEDCOM EXPORT
+// ══════════════════════════════════════════════════════════════════
+function exportGED() {
+  const lines = [
+    '0 HEAD',
+    '1 GEDC',
+    '2 VERS 5.5.1',
+    '2 FORM LINEAGE-LINKED',
+    '1 CHAR UTF-8',
+    `1 DATE ${new Date().toLocaleDateString(lang === 'de' ? 'de-DE' : lang === 'es' ? 'es-ES' : 'en-GB',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase()}`,
+    '1 NOTE Exported from GEDCOM Editor (gedcom-editor.html)',
+  ];
+
+  for (const p of Object.values(persons)) {
+    lines.push(`0 ${p.id} INDI`);
+    const nm = (p.givn||'') + (p.surn ? ' /' + p.surn + '/' : '');
+    if (nm.trim()) lines.push(`1 NAME ${nm.trim()}`);
+    if (p.givn) lines.push(`2 GIVN ${p.givn}`);
+    if (p.surn) lines.push(`2 SURN ${p.surn}`);
+    lines.push(`1 SEX ${p.sex||'U'}`);
+    if (p.birth_date || p.birth_plac) {
+      lines.push('1 BIRT');
+      if (p.birth_date) lines.push(`2 DATE ${p.birth_date}`);
+      if (p.birth_plac) lines.push(`2 PLAC ${p.birth_plac}`);
+    }
+    if (p.deat_date || p.deat_plac) {
+      lines.push('1 DEAT');
+      if (p.deat_date) lines.push(`2 DATE ${p.deat_date}`);
+      if (p.deat_plac) lines.push(`2 PLAC ${p.deat_plac}`);
+    }
+    for (const fid of p.fams) lines.push(`1 FAMS ${fid}`);
+    for (const fid of p.famc) lines.push(`1 FAMC ${fid}`);
+    if (p.note) {
+      const noteLines = p.note.split('\n');
+      lines.push(`1 NOTE ${noteLines[0]}`);
+      for (let i=1;i<noteLines.length;i++) lines.push(`2 CONT ${noteLines[i]}`);
+    }
+  }
+
+  for (const fam of Object.values(families)) {
+    lines.push(`0 ${fam.id} FAM`);
+    if (fam.husb) lines.push(`1 HUSB ${fam.husb}`);
+    if (fam.wife) lines.push(`1 WIFE ${fam.wife}`);
+    for (const cid of fam.chil) lines.push(`1 CHIL ${cid}`);
+    if (fam.marr_date || fam.marr_plac) {
+      lines.push('1 MARR');
+      if (fam.marr_date) lines.push(`2 DATE ${fam.marr_date}`);
+      if (fam.marr_plac) lines.push(`2 PLAC ${fam.marr_plac}`);
+    }
+  }
+
+  lines.push('0 TRLR');
+  const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename.replace(/\.ged$/i, '-edited.ged');
+  a.click();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// SEARCH OVERLAY
+// ══════════════════════════════════════════════════════════════════
+document.getElementById('searchInput').addEventListener('input', function() {
+  const q = this.value.toLowerCase().trim();
+  const dd = document.getElementById('searchDropdown');
+  dd.innerHTML = '';
+  if (!q || !Object.keys(persons).length) return;
+  const matches = Object.values(persons)
+    .filter(p => personName(p).toLowerCase().includes(q)).slice(0, 15);
+  for (const p of matches) {
+    const item = document.createElement('div');
+    item.className = 'search-item';
+    item.innerHTML = `<span>${personName(p)}</span><span class="s-id">${p.id}</span>`;
+    item.addEventListener('click', () => {
+      dd.innerHTML = '';
+      document.getElementById('searchInput').value = personName(p);
+      selectPerson(p.id);
+    });
+    dd.appendChild(item);
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════
+// FILE LOADING
+// ══════════════════════════════════════════════════════════════════
+document.getElementById('fileBtn').onclick = () => document.getElementById('fileInput').click();
+document.getElementById('fileInput').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+  filename = file.name;
+  const reader = new FileReader();
+  reader.onload = e => {
+    parseGED(e.target.result);
+    selectedId = null;
+    document.getElementById('panel').classList.remove('open');
+    document.getElementById('searchOverlay').classList.remove('hidden');
+    document.getElementById('searchInput').value = '';
+    document.getElementById('searchDropdown').innerHTML = '';
+    updateStatsEl();
+    gRoot.selectAll('*').remove();
+  };
+  reader.readAsText(file);
+  this.value = '';
+});
+
+function updateStatsEl() {
+  const np = Object.keys(persons).length;
+  const nf = Object.keys(families).length;
+  const el = document.getElementById('statsEl');
+  el.removeAttribute('data-i18n-attr');
+  el.textContent = t('statsTemplate')(filename, np, nf);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// CONTROLS
+// ══════════════════════════════════════════════════════════════════
+document.getElementById('slHops').addEventListener('input', function() {
+  document.getElementById('hopsVal').textContent = this.value;
+  if (selectedId) renderSubgraph(selectedId, +this.value);
+});
+document.getElementById('slForce').addEventListener('input', function() {
+  simulation.force('charge').strength(+this.value);
+  simulation.alpha(0.3).restart();
+});
+document.getElementById('slLink').addEventListener('input', function() {
+  simulation.force('link').distance(+this.value);
+  simulation.alpha(0.3).restart();
+});
+document.getElementById('chkNames').addEventListener('change', function() {
+  if (labelSel) labelSel.attr('visibility', this.checked ? 'visible' : 'hidden');
+});
+document.getElementById('btnReset').addEventListener('click', () => {
+  if (nodeGroup) nodeGroup.each(d => { d.fx=null; d.fy=null; });
+  simulation.alpha(1).restart();
+  svg.transition().duration(400).call(zoom.transform, d3.zoomIdentity);
+});
+
+// Resize
+window.addEventListener('resize', () => {
+  W = svgEl.clientWidth; H = svgEl.clientHeight;
+  svg.attr('viewBox', `0 0 ${W} ${H}`);
+  simulation.force('center', d3.forceCenter(W/2, H/2)).alpha(0.1).restart();
+});
+</script>
+</body>
+</html>
