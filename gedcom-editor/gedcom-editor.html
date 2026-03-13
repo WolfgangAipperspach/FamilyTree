@@ -108,6 +108,19 @@ header h1 { font-size: 0.95em; color: #fbbf24; white-space: nowrap; }
 .btn-add-person { background: #4b5563; color: #e5e7eb; border: 1px solid #6b7280; }
 .btn-add-person:hover { background: #6b7280; }
 
+/* ── Read-only info display ─────────────────────────────────────────────── */
+.info-block {
+  padding: 3px 14px 6px;
+  font-size: 0.73em; color: #9ca3af;
+  background: #111827; border-radius: 4px; margin: 0 14px 4px;
+  border: 1px solid #1f2937;
+  max-height: 90px; overflow-y: auto;
+}
+.info-block.empty { display: none; }
+.info-item { padding: 1px 0; line-height: 1.4; }
+.info-label { color: #6b7280; font-size: 0.85em; }
+.chan-row { font-size: 0.68em; color: #4b5563; text-align: right; padding: 2px 14px 8px; }
+
 /* ── Canvas area ───────────────────────────────────────────────────────── */
 #canvas-wrap { flex: 1; position: relative; overflow: hidden; }
 #canvas { width: 100%; height: 100%; display: block; cursor: grab; }
@@ -238,17 +251,44 @@ header h1 { font-size: 0.95em; color: #fbbf24; white-space: nowrap; }
         <option value="U" data-i18n="unknown">Unknown (U)</option>
       </select>
     </div>
+    <div class="field"><label data-i18n="nick">Nickname (NICK)</label><input id="fNick" type="text"></div>
+    <div class="field"><label data-i18n="titl">Title (TITL)</label><input id="fTitl" type="text"></div>
 
     <div class="section-title" data-i18n="birth">Birth</div>
     <div class="field"><label data-i18n="date">Date (DATE)</label><input id="fBirtDate" type="text" placeholder="e.g. 18 DEC 1953"></div>
     <div class="field"><label data-i18n="place">Place (PLAC)</label><input id="fBirtPlac" type="text"></div>
 
+    <div class="section-title" data-i18n="baptism">Baptism (BAPM/CHR)</div>
+    <div class="field"><label data-i18n="date">Date (DATE)</label><input id="fBapmDate" type="text"></div>
+    <div class="field"><label data-i18n="place">Place (PLAC)</label><input id="fBapmPlac" type="text"></div>
+
     <div class="section-title" data-i18n="death">Death</div>
     <div class="field"><label data-i18n="date">Date (DATE)</label><input id="fDeatDate" type="text"></div>
     <div class="field"><label data-i18n="place">Place (PLAC)</label><input id="fDeatPlac" type="text"></div>
 
+    <div class="section-title" data-i18n="burial">Burial (BURI)</div>
+    <div class="field"><label data-i18n="date">Date (DATE)</label><input id="fBuriDate" type="text"></div>
+    <div class="field"><label data-i18n="place">Place (PLAC)</label><input id="fBuriPlac" type="text"></div>
+
+    <div class="section-title" data-i18n="attributes">Attributes</div>
+    <div class="field"><label data-i18n="occupation">Occupation (OCCU)</label><textarea id="fOccu" rows="2" style="resize:vertical"></textarea></div>
+    <div class="field"><label data-i18n="nationality">Nationality (NATI)</label><input id="fNati" type="text"></div>
+    <div class="field"><label data-i18n="religion">Religion (RELI)</label><input id="fReli" type="text"></div>
+    <div class="field"><label data-i18n="education">Education (EDUC)</label><input id="fEduc" type="text"></div>
+
+    <div class="section-title" data-i18n="residence">Residence (RESI)</div>
+    <div class="field"><label data-i18n="date">Date (DATE)</label><input id="fResiDate" type="text"></div>
+    <div class="field"><label data-i18n="place">Place (PLAC)</label><input id="fResiPlac" type="text"></div>
+
+    <div class="section-title" data-i18n="otherEvents">Other Events (EVEN)</div>
+    <div id="fEvenList" class="info-block empty"></div>
+
+    <div class="section-title" data-i18n="altNames">Alternative Names</div>
+    <div id="fAltNames" class="info-block empty"></div>
+
     <div class="section-title" data-i18n="note">Note</div>
     <div class="field"><textarea id="fNote" rows="3"></textarea></div>
+    <div id="fChan" class="chan-row"></div>
 
     <div class="section-title" data-i18n="spouses">Spouses</div>
     <div class="link-section" id="spouseList"></div>
@@ -320,8 +360,16 @@ const LANGS = {
     force:'Force', link:'Link dist', names:'Names', reset:'Reset',
     person:'Person', close:'Close',
     personalData:'Personal data', givenName:'Given name (GIVN)', surname:'Surname (SURN)',
+    nick:'Nickname (NICK)', titl:'Title (TITL)',
     sex:'Sex', male:'Male (M)', female:'Female (F)', unknown:'Unknown (U)',
-    birth:'Birth', death:'Death', date:'Date (DATE)', place:'Place (PLAC)', note:'Note',
+    birth:'Birth', baptism:'Baptism (BAPM/CHR)', death:'Death', burial:'Burial (BURI)',
+    date:'Date (DATE)', place:'Place (PLAC)', note:'Note',
+    attributes:'Attributes', occupation:'Occupation (OCCU)', nationality:'Nationality (NATI)',
+    religion:'Religion (RELI)', education:'Education (EDUC)',
+    residence:'Residence (RESI)',
+    otherEvents:'Other Events (EVEN)', altNames:'Alternative Names',
+    lastChanged:'Last changed',
+    marriedOn:'Married', divorcedOn:'Divorced',
     spouses:'Spouses', children:'Children', parents:'Parents',
     addSpouse:'+ Add spouse', addChild:'+ Add child', addParent:'+ Add parent',
     savePerson:'💾 Save person', newPerson:'➕ New person', exportGed:'⬇ Export GEDCOM',
@@ -329,7 +377,7 @@ const LANGS = {
     searchPerson:'Search person', nameOrId:'Name or ID…', cancel:'Cancel',
     legend:'Legend', marriage:'Marriage', parentChild:'Parent→Child', sibling:'Sibling',
     searchPlaceholder:'Search person…',
-    born:'Born', died:'Died', place2:'Place',
+    born:'Born', died:'Died', place2:'Place', occu2:'Occu.',
     unknown2:'(unknown)',
     statsTemplate:(f,np,nf) => `${f} · ${np} persons · ${nf} families`,
     newGivn:'New', newSurn:'Person',
@@ -341,8 +389,16 @@ const LANGS = {
     force:'Kraft', link:'Abstand', names:'Namen', reset:'Zurücksetzen',
     person:'Person', close:'Schließen',
     personalData:'Persönliche Daten', givenName:'Vorname (GIVN)', surname:'Nachname (SURN)',
+    nick:'Spitzname (NICK)', titl:'Titel (TITL)',
     sex:'Geschlecht', male:'Männlich (M)', female:'Weiblich (F)', unknown:'Unbekannt (U)',
-    birth:'Geburt', death:'Tod', date:'Datum (DATE)', place:'Ort (PLAC)', note:'Notiz',
+    birth:'Geburt', baptism:'Taufe (BAPM/CHR)', death:'Tod', burial:'Beisetzung (BURI)',
+    date:'Datum (DATE)', place:'Ort (PLAC)', note:'Notiz',
+    attributes:'Attribute', occupation:'Beruf (OCCU)', nationality:'Nationalität (NATI)',
+    religion:'Religion (RELI)', education:'Bildung (EDUC)',
+    residence:'Wohnsitz (RESI)',
+    otherEvents:'Andere Ereignisse (EVEN)', altNames:'Alternative Namen',
+    lastChanged:'Zuletzt geändert',
+    marriedOn:'Verheiratet', divorcedOn:'Geschieden',
     spouses:'Ehepartner', children:'Kinder', parents:'Eltern',
     addSpouse:'+ Ehepartner hinzufügen', addChild:'+ Kind hinzufügen', addParent:'+ Elternteil hinzufügen',
     savePerson:'💾 Person speichern', newPerson:'➕ Neue Person', exportGed:'⬇ GEDCOM exportieren',
@@ -350,7 +406,7 @@ const LANGS = {
     searchPerson:'Person suchen', nameOrId:'Name oder ID…', cancel:'Abbrechen',
     legend:'Legende', marriage:'Ehe', parentChild:'Eltern→Kind', sibling:'Geschwister',
     searchPlaceholder:'Person suchen…',
-    born:'Geb.', died:'Gest.', place2:'Ort',
+    born:'Geb.', died:'Gest.', place2:'Ort', occu2:'Beruf',
     unknown2:'(unbekannt)',
     statsTemplate:(f,np,nf) => `${f} · ${np} Personen · ${nf} Familien`,
     newGivn:'Neue', newSurn:'Person',
@@ -362,8 +418,16 @@ const LANGS = {
     force:'Fuerza', link:'Enlace', names:'Nombres', reset:'Reiniciar',
     person:'Persona', close:'Cerrar',
     personalData:'Datos personales', givenName:'Nombre (GIVN)', surname:'Apellido (SURN)',
+    nick:'Apodo (NICK)', titl:'Título (TITL)',
     sex:'Sexo', male:'Masculino (M)', female:'Femenino (F)', unknown:'Desconocido (U)',
-    birth:'Nacimiento', death:'Fallecimiento', date:'Fecha (DATE)', place:'Lugar (PLAC)', note:'Nota',
+    birth:'Nacimiento', baptism:'Bautismo (BAPM/CHR)', death:'Fallecimiento', burial:'Entierro (BURI)',
+    date:'Fecha (DATE)', place:'Lugar (PLAC)', note:'Nota',
+    attributes:'Atributos', occupation:'Ocupación (OCCU)', nationality:'Nacionalidad (NATI)',
+    religion:'Religión (RELI)', education:'Educación (EDUC)',
+    residence:'Residencia (RESI)',
+    otherEvents:'Otros Eventos (EVEN)', altNames:'Nombres alternativos',
+    lastChanged:'Última modificación',
+    marriedOn:'Casado/a', divorcedOn:'Divorciado/a',
     spouses:'Cónyuges', children:'Hijos/as', parents:'Padres',
     addSpouse:'+ Añadir cónyuge', addChild:'+ Añadir hijo/a', addParent:'+ Añadir padre/madre',
     savePerson:'💾 Guardar persona', newPerson:'➕ Nueva persona', exportGed:'⬇ Exportar GEDCOM',
@@ -371,7 +435,7 @@ const LANGS = {
     searchPerson:'Buscar persona', nameOrId:'Nombre o ID…', cancel:'Cancelar',
     legend:'Leyenda', marriage:'Matrimonio', parentChild:'Padre→Hijo', sibling:'Hermano/a',
     searchPlaceholder:'Buscar persona…',
-    born:'Nac.', died:'Fall.', place2:'Lugar',
+    born:'Nac.', died:'Fall.', place2:'Lugar', occu2:'Ocup.',
     unknown2:'(desconocido)',
     statsTemplate:(f,np,nf) => `${f} · ${np} personas · ${nf} familias`,
     newGivn:'Nueva', newSurn:'Persona',
@@ -422,6 +486,9 @@ applyLang();
 // ══════════════════════════════════════════════════════════════════
 let persons   = {};   // id → person object
 let families  = {};   // id → family object
+let notes     = {};   // id → resolved note text
+let rawHead   = [];   // original HEAD record lines (for round-trip)
+let rawPassthrough = []; // arrays of lines for SUBM/SOUR/NOTE/REPO records
 let filename  = 'export.ged';
 let selectedId = null;
 let nextIndiN  = 1;
@@ -432,10 +499,19 @@ let linkSearchMode = null;  // 'spouse' | 'child' | 'parent'
 // GEDCOM PARSER
 // ══════════════════════════════════════════════════════════════════
 function parseGED(text) {
-  persons = {}; families = {};
+  persons = {}; families = {}; notes = {};
+  rawHead = []; rawPassthrough = [];
   const lines = text.split(/\r?\n/);
-  let curIndi = null, curFam = null;
-  let inBirt = false, inDeat = false, inMarr = false, inNote = false;
+
+  // current record cursors
+  let curIndi = null, curFam = null, curNote = null;
+  let curHead = false, curPass = null; // HEAD passthrough, other record passthrough
+  // INDI context flags
+  let inBirt=false, inDeat=false, inNote=false, inBapm=false, inBuri=false;
+  let inResi=false, inEven=false, inOccu=false, inName=false, inChan=false;
+  let firstName=true; // first NAME record is primary
+  // FAM context flags
+  let inMarr=false, inDiv=false;
 
   for (let i = 0; i < lines.length; i++) {
     const raw = lines[i];
@@ -444,24 +520,71 @@ function parseGED(text) {
     const lvl = parseInt(parts[0]);
     if (isNaN(lvl)) continue;
     const rest = parts.slice(1);
-    const tag  = rest[0] || '';
-    const val  = rest.slice(1).join(' ');
+    // tag is first token that is not an xref
+    let tag, val;
+    if (lvl === 0 && rest.length >= 2 && rest[0].startsWith('@')) {
+      tag = rest[1]; val = rest.slice(2).join(' ');
+    } else {
+      tag = rest[0] || ''; val = rest.slice(1).join(' ');
+    }
 
     if (lvl === 0) {
-      curIndi = curFam = null;
-      inBirt = inDeat = inMarr = inNote = false;
+      curIndi = curFam = curNote = null;
+      curHead = false; curPass = null;
+      inBirt=inDeat=inNote=inBapm=inBuri=inResi=inEven=inOccu=inName=inChan=false;
+      inMarr=inDiv=false; firstName=true;
+      // HEAD has no xref: 0 HEAD
+      if (rest.length === 1 && rest[0] === 'HEAD') {
+        curHead = true; rawHead = [raw]; continue;
+      }
       if (rest.length >= 2) {
         const xref = rest[0], recTag = rest[1];
         if (recTag === 'INDI') {
           curIndi = xref;
-          persons[xref] = { id: xref, givn:'', surn:'', sex:'U',
-            birth_date:'', birth_plac:'', deat_date:'', deat_plac:'',
-            note:'', fams:[], famc:[], raw_lines: [raw] };
+          persons[xref] = {
+            id: xref,
+            givn:'', surn:'', nick:'', titl:'',
+            alt_names:[],   // [{value, type, givn, surn}]
+            sex:'U',
+            birth_date:'', birth_plac:'',
+            bapm_date:'',  bapm_plac:'',
+            deat_date:'',  deat_plac:'',
+            buri_date:'',  buri_plac:'',
+            occu:[],        // array of strings
+            nati:'', reli:'', educ:'',
+            resi_date:'',  resi_plac:'',
+            even:[],        // [{type, date, plac}]
+            note:'', chan_date:'',
+            fams:[], famc:[],
+            raw_lines: [raw]
+          };
         } else if (recTag === 'FAM') {
           curFam = xref;
           families[xref] = { id: xref, husb:null, wife:null, chil:[],
-            marr_date:'', marr_plac:'', raw_lines: [raw] };
+            marr_date:'', marr_plac:'',
+            div_date:'',  div_plac:'',
+            raw_lines: [raw] };
+        } else if (recTag === 'NOTE') {
+          curNote = xref;
+          notes[xref] = rest.slice(2).join(' '); // text on the NOTE line
+          // Also store raw for passthrough so the record is preserved in export
+          curPass = [raw]; rawPassthrough.push(curPass);
+        } else if (['SUBM','SOUR','REPO'].includes(recTag)) {
+          curPass = [raw]; rawPassthrough.push(curPass);
         }
+      }
+      continue;
+    }
+
+    // HEAD sub-lines
+    if (curHead) { rawHead.push(raw); continue; }
+    // Other record sub-lines (SUBM, SOUR, NOTE, REPO)
+    if (curPass) {
+      curPass.push(raw);
+      // Also handle NOTE continuation for text resolution
+      if (curNote) {
+        if (tag === 'CONT') notes[curNote] += '\n' + val;
+        else if (tag === 'CONC') notes[curNote] += val;
       }
       continue;
     }
@@ -470,37 +593,119 @@ function parseGED(text) {
     if (curIndi) persons[curIndi].raw_lines.push(raw);
     if (curFam)  families[curFam].raw_lines.push(raw);
 
+    // NOTE record continuation
+    if (curNote) {
+      if (tag === 'CONT') notes[curNote] += '\n' + val;
+      else if (tag === 'CONC') notes[curNote] += val;
+      continue;
+    }
+
     if (curIndi) {
-      if (lvl === 1) { inBirt=false; inDeat=false; inNote=false; }
+      const p = persons[curIndi];
+      // reset context on new level-1 tag
+      if (lvl === 1) {
+        inBirt=inDeat=inNote=inBapm=inBuri=inResi=inEven=inOccu=inName=inChan=false;
+        p._cur_altname = null;
+      }
+
       if (lvl === 1 && tag === 'NAME') {
-        // parse "Given /Surname/"
-        const m = val.match(/^(.*?)\s*\/(.*)\/\s*$/);
-        if (m) { persons[curIndi].givn = m[1].trim(); persons[curIndi].surn = m[2].trim(); }
-        else   { persons[curIndi].givn = val.replace(/\//g,'').trim(); }
-      } else if (lvl === 2 && tag === 'GIVN') { persons[curIndi].givn = val; }
-      else if (lvl === 2 && tag === 'SURN') { persons[curIndi].surn = val; }
-      else if (lvl === 1 && tag === 'SEX')  { persons[curIndi].sex = val || 'U'; }
-      else if (lvl === 1 && tag === 'BIRT') { inBirt = true; }
-      else if (lvl === 2 && inBirt && tag === 'DATE') { persons[curIndi].birth_date = val; }
-      else if (lvl === 2 && inBirt && tag === 'PLAC') { persons[curIndi].birth_plac = val; }
-      else if (lvl === 1 && tag === 'DEAT') { inDeat = true; }
-      else if (lvl === 2 && inDeat && tag === 'DATE') { persons[curIndi].deat_date = val; }
-      else if (lvl === 2 && inDeat && tag === 'PLAC') { persons[curIndi].deat_plac = val; }
-      else if (lvl === 1 && tag === 'NOTE') { persons[curIndi].note = val; inNote = true; }
-      else if (lvl === 2 && inNote && tag === 'CONT') { persons[curIndi].note += '\n' + val; }
-      else if (lvl === 1 && tag === 'FAMS') { persons[curIndi].fams.push(val); }
-      else if (lvl === 1 && tag === 'FAMC') { persons[curIndi].famc.push(val); }
+        inName = true;
+        if (firstName) {
+          firstName = false;
+          // parse "Given /Surname/" from the NAME value
+          const m = val.match(/^(.*?)\s*\/(.*)\/\s*$/);
+          if (m) { p.givn = m[1].trim(); p.surn = m[2].trim(); }
+          else   { p.givn = val.replace(/\//g,'').trim(); }
+        } else {
+          // alternative name — capture it
+          const an = { value: val, type:'', givn:'', surn:'' };
+          const m2 = val.match(/^(.*?)\s*\/(.*)\/\s*$/);
+          if (m2) { an.givn = m2[1].trim(); an.surn = m2[2].trim(); }
+          p.alt_names.push(an);
+          inName = false; // sub-fields will set p._cur_altname
+          p._cur_altname = an;
+        }
+      }
+      else if (lvl === 2 && tag === 'GIVN') {
+        if (firstName === false && p._cur_altname) p._cur_altname.givn = val;
+        else p.givn = val;
+      }
+      else if (lvl === 2 && tag === 'SURN') {
+        if (firstName === false && p._cur_altname) p._cur_altname.surn = val;
+        else p.surn = val;
+      }
+      else if (lvl === 2 && tag === 'TYPE' && p._cur_altname) { p._cur_altname.type = val; }
+      else if (lvl === 2 && tag === 'NICK' && inName) { p.nick = p.nick || val; }
+      else if (lvl === 1 && tag === 'NICK')  { p.nick = val; }
+      else if (lvl === 1 && tag === 'TITL')  { p.titl = val; }
+      else if (lvl === 1 && tag === 'SEX')   { p.sex = val || 'U'; }
+      else if (lvl === 1 && tag === 'BIRT')  { inBirt = true; }
+      else if (lvl === 2 && inBirt && tag === 'DATE') { p.birth_date = val; }
+      else if (lvl === 2 && inBirt && tag === 'PLAC') { p.birth_plac = val; }
+      else if (lvl === 1 && (tag === 'BAPM' || tag === 'CHR' || tag === 'CHRA')) { inBapm = true; }
+      else if (lvl === 2 && inBapm && tag === 'DATE') { p.bapm_date = p.bapm_date || val; }
+      else if (lvl === 2 && inBapm && tag === 'PLAC') { p.bapm_plac = p.bapm_plac || val; }
+      else if (lvl === 1 && tag === 'DEAT')  { inDeat = true; }
+      else if (lvl === 2 && inDeat && tag === 'DATE') { p.deat_date = val; }
+      else if (lvl === 2 && inDeat && tag === 'PLAC') { p.deat_plac = val; }
+      else if (lvl === 1 && (tag === 'BURI' || tag === 'CREM')) { inBuri = true; }
+      else if (lvl === 2 && inBuri && tag === 'DATE') { p.buri_date = p.buri_date || val; }
+      else if (lvl === 2 && inBuri && tag === 'PLAC') { p.buri_plac = p.buri_plac || val; }
+      else if (lvl === 1 && tag === 'OCCU')  {
+        inOccu = true;
+        if (val) p.occu.push(val); // simple OCCU line
+      }
+      else if (lvl === 1 && tag === 'NATI')  { p.nati = val; }
+      else if (lvl === 1 && tag === 'RELI')  { p.reli = val; }
+      else if (lvl === 1 && tag === 'EDUC')  { p.educ = val; }
+      else if (lvl === 1 && tag === 'RESI')  { inResi = true; }
+      else if (lvl === 2 && inResi && tag === 'DATE') { p.resi_date = p.resi_date || val; }
+      else if (lvl === 2 && inResi && tag === 'PLAC') { p.resi_plac = p.resi_plac || val; }
+      else if (lvl === 1 && tag === 'EVEN')  {
+        inEven = true;
+        // val may be a description; TYPE sub-tag overrides it
+        p.even.push({ type:'', desc: val||'', date:'', plac:'' });
+      }
+      else if (lvl === 2 && inEven && tag === 'TYPE' && p.even.length) {
+        p.even[p.even.length-1].type = val;
+        if (!p.even[p.even.length-1].desc) p.even[p.even.length-1].desc = val;
+      }
+      else if (lvl === 2 && inEven && tag === 'DATE' && p.even.length) { p.even[p.even.length-1].date = val; }
+      else if (lvl === 2 && inEven && tag === 'PLAC' && p.even.length) { p.even[p.even.length-1].plac = val; }
+      else if (lvl === 1 && tag === 'NOTE')  {
+        p._orig_note_val = val;  // preserve original (may be @Nxxx@ reference)
+        p.note = val; inNote = true;
+      }
+      else if (lvl === 2 && inNote && tag === 'CONT') { p.note += '\n' + val; }
+      else if (lvl === 2 && inNote && tag === 'CONC') { p.note += val; }
+      else if (lvl === 1 && tag === 'CHAN')  { inChan = true; }
+      else if (lvl === 2 && inChan && tag === 'DATE') { p.chan_date = val; }
+      else if (lvl === 1 && tag === 'FAMS') { p.fams.push(val); }
+      else if (lvl === 1 && tag === 'FAMC') { p.famc.push(val); }
     }
 
     if (curFam) {
-      if (lvl === 1) { inMarr = false; }
-      if (lvl === 1 && tag === 'HUSB') { families[curFam].husb = val; }
-      else if (lvl === 1 && tag === 'WIFE') { families[curFam].wife = val; }
-      else if (lvl === 1 && tag === 'CHIL') { families[curFam].chil.push(val); }
+      const f = families[curFam];
+      if (lvl === 1) { inMarr = false; inDiv = false; }
+      if (lvl === 1 && tag === 'HUSB') { f.husb = val; }
+      else if (lvl === 1 && tag === 'WIFE') { f.wife = val; }
+      else if (lvl === 1 && tag === 'CHIL') { f.chil.push(val); }
       else if (lvl === 1 && tag === 'MARR') { inMarr = true; }
-      else if (lvl === 2 && inMarr && tag === 'DATE') { families[curFam].marr_date = val; }
-      else if (lvl === 2 && inMarr && tag === 'PLAC') { families[curFam].marr_plac = val; }
+      else if (lvl === 2 && inMarr && tag === 'DATE') { f.marr_date = val; }
+      else if (lvl === 2 && inMarr && tag === 'PLAC') { f.marr_plac = val; }
+      else if (lvl === 1 && tag === 'DIV')  { inDiv = true; f.div_date = f.div_date || ''; }
+      else if (lvl === 2 && inDiv && tag === 'DATE') { f.div_date = val; }
+      else if (lvl === 2 && inDiv && tag === 'PLAC') { f.div_plac = val; }
     }
+  }
+
+  // Resolve NOTE xref references in persons
+  for (const p of Object.values(persons)) {
+    if (p.note && /^@[^@]+@$/.test(p.note.trim())) {
+      p.note = notes[p.note.trim()] || p.note;
+    }
+    // clean up temp parsing state
+    delete p._cur_altname;
   }
 
   // figure out next available IDs
@@ -522,8 +727,10 @@ function personName(p) {
 function buildGraph() {
   const nodes = Object.values(persons).map(p => ({
     id: p.id, name: personName(p), givn: p.givn||'', surn: p.surn||'', sex: p.sex,
+    nick: p.nick||'', titl: p.titl||'',
     birth: p.birth_date, place: p.birth_plac,
-    deat: p.deat_date
+    deat: p.deat_date, deat_plac: p.deat_plac||'',
+    occu: (p.occu||[]).join(', ') || ''
   }));
   const links = [];
   for (const fam of Object.values(families)) {
@@ -682,10 +889,11 @@ function renderSubgraph(personId, hops) {
   nodeGroup
     .on('mouseover', (e,d) => {
       tip.innerHTML = [
-        `<div class="t-name">${d.name}</div>`,
-        d.birth ? `<div class="t-row">${t('born')}: <span>${d.birth}</span></div>` : '',
-        d.place ? `<div class="t-row">${t('place2')}: <span>${d.place}</span></div>` : '',
-        d.deat  ? `<div class="t-row">${t('died')}: <span>${d.deat}</span></div>` : '',
+        `<div class="t-name">${d.name}${d.nick ? ` <span style="color:#9ca3af;font-size:0.85em">"${d.nick}"</span>` : ''}</div>`,
+        d.titl  ? `<div class="t-row">${d.titl}</div>` : '',
+        d.birth ? `<div class="t-row">${t('born')}: <span>${d.birth}${d.place ? ', '+d.place : ''}</span></div>` : '',
+        d.deat  ? `<div class="t-row">${t('died')}: <span>${d.deat}${d.deat_plac ? ', '+d.deat_plac : ''}</span></div>` : '',
+        d.occu  ? `<div class="t-row">${t('occu2')}: <span>${d.occu}</span></div>` : '',
         `<div class="t-row">ID: <span>${d.id}</span></div>`,
       ].join('');
       tip.style.display = 'block';
@@ -726,12 +934,56 @@ function openPanel(id) {
   document.getElementById('panelTitle').textContent = personName(p);
   document.getElementById('fGivn').value     = p.givn || '';
   document.getElementById('fSurn').value     = p.surn || '';
+  document.getElementById('fNick').value     = p.nick || '';
+  document.getElementById('fTitl').value     = p.titl || '';
   document.getElementById('fSex').value      = p.sex  || 'U';
   document.getElementById('fBirtDate').value = p.birth_date || '';
   document.getElementById('fBirtPlac').value = p.birth_plac || '';
+  document.getElementById('fBapmDate').value = p.bapm_date  || '';
+  document.getElementById('fBapmPlac').value = p.bapm_plac  || '';
   document.getElementById('fDeatDate').value = p.deat_date  || '';
   document.getElementById('fDeatPlac').value = p.deat_plac  || '';
+  document.getElementById('fBuriDate').value = p.buri_date  || '';
+  document.getElementById('fBuriPlac').value = p.buri_plac  || '';
+  document.getElementById('fOccu').value     = (p.occu||[]).join('\n');
+  document.getElementById('fNati').value     = p.nati || '';
+  document.getElementById('fReli').value     = p.reli || '';
+  document.getElementById('fEduc').value     = p.educ || '';
+  document.getElementById('fResiDate').value = p.resi_date  || '';
+  document.getElementById('fResiPlac').value = p.resi_plac  || '';
   document.getElementById('fNote').value     = p.note || '';
+
+  // EVEN — read-only list
+  const evenDiv = document.getElementById('fEvenList');
+  if (p.even && p.even.length) {
+    evenDiv.classList.remove('empty');
+    evenDiv.innerHTML = p.even.map(e => {
+      const label = e.type || e.desc || 'Event';
+      const parts = [label, e.date, e.plac].filter(Boolean);
+      return `<div class="info-item">${parts.join(' · ')}</div>`;
+    }).join('');
+  } else {
+    evenDiv.classList.add('empty');
+    evenDiv.innerHTML = '';
+  }
+
+  // Alt names — read-only list
+  const altDiv = document.getElementById('fAltNames');
+  if (p.alt_names && p.alt_names.length) {
+    altDiv.classList.remove('empty');
+    altDiv.innerHTML = p.alt_names.map(n => {
+      const nm = n.value || [n.givn, n.surn ? '/'+n.surn+'/' : ''].filter(Boolean).join(' ');
+      return `<div class="info-item">${nm}${n.type ? ` <span class="info-label">(${n.type})</span>` : ''}</div>`;
+    }).join('');
+  } else {
+    altDiv.classList.add('empty');
+    altDiv.innerHTML = '';
+  }
+
+  // CHAN — read-only
+  const chanEl = document.getElementById('fChan');
+  chanEl.textContent = p.chan_date ? `${t('lastChanged')}: ${p.chan_date}` : '';
+
   renderLinks(id);
   document.getElementById('panel').classList.add('open');
 }
@@ -746,11 +998,18 @@ function renderLinks(id) {
     if (!fam) continue;
     const spouseId = fam.husb === id ? fam.wife : fam.husb;
     const sp = spouseId ? persons[spouseId] : null;
+    const famInfo = [];
+    if (fam.marr_date || fam.marr_plac) famInfo.push(`${t('marriedOn')}: ${[fam.marr_date, fam.marr_plac].filter(Boolean).join(', ')}`);
+    if (fam.div_date  || fam.div_plac)  famInfo.push(`${t('divorcedOn')}: ${[fam.div_date,  fam.div_plac ].filter(Boolean).join(', ')}`);
     const row = document.createElement('div');
     row.className = 'link-row';
-    row.innerHTML = `<span class="link-name">${sp ? personName(sp) : '–'}</span>
-      <span class="link-rel">${fam.marr_date||''}</span>
-      <button title="${t('removeLink')}" onclick="removeSpouseLink('${famId}','${id}');event.stopPropagation()">✕</button>`;
+    row.style.flexDirection = 'column';
+    row.style.alignItems = 'flex-start';
+    row.innerHTML = `<div style="display:flex;width:100%;align-items:center">
+      <span class="link-name">${sp ? personName(sp) : '–'}</span>
+      <button title="${t('removeLink')}" onclick="removeSpouseLink('${famId}','${id}');event.stopPropagation()" style="margin-left:auto">✕</button>
+      </div>
+      ${famInfo.map(s=>`<div style="font-size:0.68em;color:#6b7280;padding:0 2px">${s}</div>`).join('')}`;
     if (sp) row.addEventListener('click', () => selectPerson(spouseId));
     spouseDiv.appendChild(row);
   }
@@ -800,11 +1059,23 @@ function savePersonEdits() {
   const p = persons[selectedId];
   p.givn       = document.getElementById('fGivn').value.trim();
   p.surn       = document.getElementById('fSurn').value.trim();
+  p.nick       = document.getElementById('fNick').value.trim();
+  p.titl       = document.getElementById('fTitl').value.trim();
   p.sex        = document.getElementById('fSex').value;
   p.birth_date = document.getElementById('fBirtDate').value.trim();
   p.birth_plac = document.getElementById('fBirtPlac').value.trim();
+  p.bapm_date  = document.getElementById('fBapmDate').value.trim();
+  p.bapm_plac  = document.getElementById('fBapmPlac').value.trim();
   p.deat_date  = document.getElementById('fDeatDate').value.trim();
   p.deat_plac  = document.getElementById('fDeatPlac').value.trim();
+  p.buri_date  = document.getElementById('fBuriDate').value.trim();
+  p.buri_plac  = document.getElementById('fBuriPlac').value.trim();
+  p.occu       = document.getElementById('fOccu').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  p.nati       = document.getElementById('fNati').value.trim();
+  p.reli       = document.getElementById('fReli').value.trim();
+  p.educ       = document.getElementById('fEduc').value.trim();
+  p.resi_date  = document.getElementById('fResiDate').value.trim();
+  p.resi_plac  = document.getElementById('fResiPlac').value.trim();
   p.note       = document.getElementById('fNote').value;
   document.getElementById('panelTitle').textContent = personName(p);
   renderSubgraph(selectedId, +document.getElementById('slHops').value);
@@ -817,9 +1088,16 @@ function savePersonEdits() {
 function addNewPerson() {
   const id = `@I${String(nextIndiN).padStart(4,'0')}@`;
   nextIndiN++;
-  persons[id] = { id, givn:t('newGivn'), surn:t('newSurn'), sex:'U',
-    birth_date:'', birth_plac:'', deat_date:'', deat_plac:'',
-    note:'', fams:[], famc:[], raw_lines:[] };
+  persons[id] = { id, givn:t('newGivn'), surn:t('newSurn'), nick:'', titl:'',
+    alt_names:[], sex:'U',
+    birth_date:'', birth_plac:'',
+    bapm_date:'',  bapm_plac:'',
+    deat_date:'',  deat_plac:'',
+    buri_date:'',  buri_plac:'',
+    occu:[], nati:'', reli:'', educ:'',
+    resi_date:'',  resi_plac:'',
+    even:[], note:'', chan_date:'',
+    fams:[], famc:[], raw_lines:[] };
   updateStatsEl();
   selectPerson(id);
 }
@@ -830,7 +1108,7 @@ function addNewPerson() {
 function newFamId() {
   const id = `@F${String(nextFamN).padStart(4,'0')}@`;
   nextFamN++;
-  families[id] = { id, husb:null, wife:null, chil:[], marr_date:'', marr_plac:'', raw_lines:[] };
+  families[id] = { id, husb:null, wife:null, chil:[], marr_date:'', marr_plac:'', div_date:'', div_plac:'', raw_lines:[] };
   return id;
 }
 
@@ -982,53 +1260,332 @@ document.getElementById('linkSearchInput').addEventListener('input', function() 
 // ══════════════════════════════════════════════════════════════════
 // GEDCOM EXPORT
 // ══════════════════════════════════════════════════════════════════
-function exportGED() {
-  const lines = [
-    '0 HEAD',
-    '1 GEDC',
-    '2 VERS 5.5.1',
-    '2 FORM LINEAGE-LINKED',
-    '1 CHAR UTF-8',
-    `1 DATE ${new Date().toLocaleDateString(lang === 'de' ? 'de-DE' : lang === 'es' ? 'es-ES' : 'en-GB',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase()}`,
-    '1 NOTE Exported from GEDCOM Editor (gedcom-editor.html)',
-  ];
+// ── EXPORT HELPERS ──────────────────────────────────────────────────────────
 
-  for (const p of Object.values(persons)) {
-    lines.push(`0 ${p.id} INDI`);
-    const nm = (p.givn||'') + (p.surn ? ' /' + p.surn + '/' : '');
-    if (nm.trim()) lines.push(`1 NAME ${nm.trim()}`);
-    if (p.givn) lines.push(`2 GIVN ${p.givn}`);
-    if (p.surn) lines.push(`2 SURN ${p.surn}`);
-    lines.push(`1 SEX ${p.sex||'U'}`);
-    if (p.birth_date || p.birth_plac) {
-      lines.push('1 BIRT');
-      if (p.birth_date) lines.push(`2 DATE ${p.birth_date}`);
-      if (p.birth_plac) lines.push(`2 PLAC ${p.birth_plac}`);
+// Group level-1+ lines into {tag, firstLine, sublines[]} blocks
+function groupL1Blocks(lines) {
+  const blocks = [];
+  let cur = null;
+  for (const line of lines) {
+    const parts = line.trimEnd().split(' ');
+    if (!parts[0]) continue;
+    const lvl = parseInt(parts[0]);
+    if (isNaN(lvl)) continue;
+    if (lvl === 1) {
+      if (cur) blocks.push(cur);
+      cur = { tag: parts[1]||'', firstLine: line, sublines: [] };
+    } else if (cur) {
+      cur.sublines.push(line);
     }
-    if (p.deat_date || p.deat_plac) {
-      lines.push('1 DEAT');
-      if (p.deat_date) lines.push(`2 DATE ${p.deat_date}`);
-      if (p.deat_plac) lines.push(`2 PLAC ${p.deat_plac}`);
-    }
-    for (const fid of p.fams) lines.push(`1 FAMS ${fid}`);
-    for (const fid of p.famc) lines.push(`1 FAMC ${fid}`);
-    if (p.note) {
-      const noteLines = p.note.split('\n');
-      lines.push(`1 NOTE ${noteLines[0]}`);
-      for (let i=1;i<noteLines.length;i++) lines.push(`2 CONT ${noteLines[i]}`);
+  }
+  if (cur) blocks.push(cur);
+  return blocks;
+}
+
+// Pass through sub-lines whose tag is NOT in ownedSet
+function passthroughExtras(out, sublines, ownedSet) {
+  for (const line of sublines) {
+    const parts = line.trimEnd().split(' ');
+    const stag = parts[1] || '';
+    if (!ownedSet.has(stag)) out.push(line);
+  }
+}
+
+// Build INDI lines using round-trip (preserves unhandled data from raw_lines)
+function buildIndiLines(p) {
+  const out = [`0 ${p.id} INDI`];
+  if (!p.raw_lines || p.raw_lines.length <= 1) {
+    // New person — construct fresh
+    return buildFreshIndiLines(p);
+  }
+  const blocks = groupL1Blocks(p.raw_lines.slice(1));
+  const DP = new Set(['DATE','PLAC']);
+  const famcModel = new Set(p.famc);
+  const handledFamc = new Set();
+  let firstNameDone = false, resiDone = false, bapmDone = false;
+  const seenTags = new Set(blocks.map(b => b.tag));
+
+  for (const blk of blocks) {
+    const { tag, firstLine, sublines } = blk;
+    switch (tag) {
+      case 'NAME':
+        if (!firstNameDone) {
+          firstNameDone = true;
+          const nm = (p.givn||'') + (p.surn ? ' /' + p.surn + '/' : '');
+          if (nm.trim()) out.push(`1 NAME ${nm.trim()}`);
+          if (p.givn) out.push(`2 GIVN ${p.givn}`);
+          if (p.surn) out.push(`2 SURN ${p.surn}`);
+          if (p.nick) out.push(`2 NICK ${p.nick}`);
+          passthroughExtras(out, sublines, new Set(['GIVN','SURN','NICK','TYPE']));
+        } else {
+          out.push(firstLine, ...sublines); // alt name — pass through
+        }
+        break;
+      case 'NICK':
+        if (p.nick) out.push(`1 NICK ${p.nick}`);
+        break;
+      case 'TITL':
+        if (p.titl) out.push(`1 TITL ${p.titl}`);
+        break;
+      case 'SEX':
+        out.push(`1 SEX ${p.sex||'U'}`);
+        break;
+      case 'BIRT':
+        out.push('1 BIRT');
+        if (p.birth_date) out.push(`2 DATE ${p.birth_date}`);
+        if (p.birth_plac) out.push(`2 PLAC ${p.birth_plac}`);
+        passthroughExtras(out, sublines, DP);
+        break;
+      case 'BAPM': case 'CHR': case 'CHRA':
+        if (!bapmDone) {
+          bapmDone = true;
+          out.push(`1 ${tag}`);
+          if (p.bapm_date) out.push(`2 DATE ${p.bapm_date}`);
+          if (p.bapm_plac) out.push(`2 PLAC ${p.bapm_plac}`);
+          passthroughExtras(out, sublines, DP);
+        } else {
+          out.push(firstLine, ...sublines);
+        }
+        break;
+      case 'DEAT':
+        out.push('1 DEAT');
+        if (p.deat_date) out.push(`2 DATE ${p.deat_date}`);
+        if (p.deat_plac) out.push(`2 PLAC ${p.deat_plac}`);
+        passthroughExtras(out, sublines, DP);
+        break;
+      case 'BURI': case 'CREM':
+        out.push(`1 ${tag}`);
+        if (p.buri_date) out.push(`2 DATE ${p.buri_date}`);
+        if (p.buri_plac) out.push(`2 PLAC ${p.buri_plac}`);
+        passthroughExtras(out, sublines, DP);
+        break;
+      case 'OCCU':
+        if (sublines.length > 0) {
+          out.push(firstLine, ...sublines); // complex OCCU — preserve as-is
+        }
+        // simple OCCU (no sub-tags) handled after blocks via p.occu
+        break;
+      case 'NATI': if (p.nati) out.push(`1 NATI ${p.nati}`); break;
+      case 'RELI': if (p.reli) out.push(`1 RELI ${p.reli}`); break;
+      case 'EDUC': if (p.educ) out.push(`1 EDUC ${p.educ}`); break;
+      case 'RESI':
+        if (!resiDone) {
+          resiDone = true;
+          out.push('1 RESI');
+          if (p.resi_date) out.push(`2 DATE ${p.resi_date}`);
+          if (p.resi_plac) out.push(`2 PLAC ${p.resi_plac}`);
+          passthroughExtras(out, sublines, DP);
+        } else {
+          out.push(firstLine, ...sublines);
+        }
+        break;
+      case 'EVEN':
+        out.push(firstLine, ...sublines); // pass through entirely
+        break;
+      case 'NOTE': {
+        // Preserve @Nxxx@ reference if note was not changed by user
+        const origVal = (p._orig_note_val || '').trim();
+        const isRef = /^@[^@]+@$/.test(origVal);
+        if (isRef && notes[origVal] === p.note) {
+          out.push(firstLine, ...sublines); // unchanged — keep reference
+        } else if (p.note) {
+          const nl = p.note.split('\n');
+          out.push(`1 NOTE ${nl[0]}`);
+          for (let j=1;j<nl.length;j++) out.push(`2 CONT ${nl[j]}`);
+        }
+        break;
+      }
+      case 'FAMS':
+        break; // output FAMS from model below
+      case 'FAMC': {
+        const fid = firstLine.trimEnd().split(' ')[2];
+        if (famcModel.has(fid)) {
+          out.push(firstLine, ...sublines); // preserves PEDI etc.
+          handledFamc.add(fid);
+        }
+        break;
+      }
+      case 'CHAN':
+        out.push(firstLine, ...sublines); // pass through (preserves TIME)
+        break;
+      default:
+        out.push(firstLine, ...sublines); // unknown — pass through
     }
   }
 
-  for (const fam of Object.values(families)) {
-    lines.push(`0 ${fam.id} FAM`);
-    if (fam.husb) lines.push(`1 HUSB ${fam.husb}`);
-    if (fam.wife) lines.push(`1 WIFE ${fam.wife}`);
-    for (const cid of fam.chil) lines.push(`1 CHIL ${cid}`);
-    if (fam.marr_date || fam.marr_plac) {
-      lines.push('1 MARR');
-      if (fam.marr_date) lines.push(`2 DATE ${fam.marr_date}`);
-      if (fam.marr_plac) lines.push(`2 PLAC ${fam.marr_plac}`);
+  // Simple occupations from model (complex ones already output above)
+  for (const occ of (p.occu||[])) if (occ) out.push(`1 OCCU ${occ}`);
+
+  // Family links from model
+  for (const fid of p.fams) out.push(`1 FAMS ${fid}`);
+  for (const fid of p.famc) if (!handledFamc.has(fid)) out.push(`1 FAMC ${fid}`);
+
+  // New fields not in original raw_lines
+  if (!seenTags.has('NICK') && p.nick) out.push(`1 NICK ${p.nick}`);
+  if (!seenTags.has('TITL') && p.titl) out.push(`1 TITL ${p.titl}`);
+  if (!seenTags.has('BIRT') && (p.birth_date||p.birth_plac)) {
+    out.push('1 BIRT');
+    if (p.birth_date) out.push(`2 DATE ${p.birth_date}`);
+    if (p.birth_plac) out.push(`2 PLAC ${p.birth_plac}`);
+  }
+  if (!seenTags.has('BAPM')&&!seenTags.has('CHR')&&!seenTags.has('CHRA')&&(p.bapm_date||p.bapm_plac)) {
+    out.push('1 BAPM');
+    if (p.bapm_date) out.push(`2 DATE ${p.bapm_date}`);
+    if (p.bapm_plac) out.push(`2 PLAC ${p.bapm_plac}`);
+  }
+  if (!seenTags.has('DEAT') && (p.deat_date||p.deat_plac)) {
+    out.push('1 DEAT');
+    if (p.deat_date) out.push(`2 DATE ${p.deat_date}`);
+    if (p.deat_plac) out.push(`2 PLAC ${p.deat_plac}`);
+  }
+  if (!seenTags.has('BURI')&&!seenTags.has('CREM')&&(p.buri_date||p.buri_plac)) {
+    out.push('1 BURI');
+    if (p.buri_date) out.push(`2 DATE ${p.buri_date}`);
+    if (p.buri_plac) out.push(`2 PLAC ${p.buri_plac}`);
+  }
+  if (!seenTags.has('NATI') && p.nati) out.push(`1 NATI ${p.nati}`);
+  if (!seenTags.has('RELI') && p.reli) out.push(`1 RELI ${p.reli}`);
+  if (!seenTags.has('EDUC') && p.educ) out.push(`1 EDUC ${p.educ}`);
+  if (!seenTags.has('RESI') && (p.resi_date||p.resi_plac)) {
+    out.push('1 RESI');
+    if (p.resi_date) out.push(`2 DATE ${p.resi_date}`);
+    if (p.resi_plac) out.push(`2 PLAC ${p.resi_plac}`);
+  }
+  if (!seenTags.has('NOTE') && p.note) {
+    const nl = p.note.split('\n');
+    out.push(`1 NOTE ${nl[0]}`);
+    for (let j=1;j<nl.length;j++) out.push(`2 CONT ${nl[j]}`);
+  }
+  return out;
+}
+
+function buildFreshIndiLines(p) {
+  const out = [`0 ${p.id} INDI`];
+  const nm = (p.givn||'') + (p.surn ? ' /' + p.surn + '/' : '');
+  if (nm.trim()) out.push(`1 NAME ${nm.trim()}`);
+  if (p.givn) out.push(`2 GIVN ${p.givn}`);
+  if (p.surn) out.push(`2 SURN ${p.surn}`);
+  if (p.nick) out.push(`2 NICK ${p.nick}`);
+  for (const an of (p.alt_names||[])) {
+    const anm = an.value || ((an.givn||'') + (an.surn ? ' /'+an.surn+'/' : ''));
+    if (anm.trim()) out.push(`1 NAME ${anm.trim()}`);
+    if (an.type) out.push(`2 TYPE ${an.type}`);
+    if (an.givn) out.push(`2 GIVN ${an.givn}`);
+    if (an.surn) out.push(`2 SURN ${an.surn}`);
+  }
+  if (p.titl) out.push(`1 TITL ${p.titl}`);
+  out.push(`1 SEX ${p.sex||'U'}`);
+  if (p.birth_date||p.birth_plac) { out.push('1 BIRT'); if (p.birth_date) out.push(`2 DATE ${p.birth_date}`); if (p.birth_plac) out.push(`2 PLAC ${p.birth_plac}`); }
+  if (p.bapm_date||p.bapm_plac)   { out.push('1 BAPM'); if (p.bapm_date)  out.push(`2 DATE ${p.bapm_date}`);  if (p.bapm_plac)  out.push(`2 PLAC ${p.bapm_plac}`);  }
+  if (p.deat_date||p.deat_plac)   { out.push('1 DEAT'); if (p.deat_date)  out.push(`2 DATE ${p.deat_date}`);  if (p.deat_plac)  out.push(`2 PLAC ${p.deat_plac}`);  }
+  if (p.buri_date||p.buri_plac)   { out.push('1 BURI'); if (p.buri_date)  out.push(`2 DATE ${p.buri_date}`);  if (p.buri_plac)  out.push(`2 PLAC ${p.buri_plac}`);  }
+  for (const occ of (p.occu||[])) if (occ) out.push(`1 OCCU ${occ}`);
+  if (p.nati) out.push(`1 NATI ${p.nati}`);
+  if (p.reli) out.push(`1 RELI ${p.reli}`);
+  if (p.educ) out.push(`1 EDUC ${p.educ}`);
+  if (p.resi_date||p.resi_plac) { out.push('1 RESI'); if (p.resi_date) out.push(`2 DATE ${p.resi_date}`); if (p.resi_plac) out.push(`2 PLAC ${p.resi_plac}`); }
+  for (const fid of p.fams) out.push(`1 FAMS ${fid}`);
+  for (const fid of p.famc) out.push(`1 FAMC ${fid}`);
+  if (p.note) { const nl = p.note.split('\n'); out.push(`1 NOTE ${nl[0]}`); for (let j=1;j<nl.length;j++) out.push(`2 CONT ${nl[j]}`); }
+  return out;
+}
+
+// Build FAM lines using round-trip
+function buildFamLines(fam) {
+  const out = [`0 ${fam.id} FAM`];
+  if (!fam.raw_lines || fam.raw_lines.length <= 1) {
+    return buildFreshFamLines(fam);
+  }
+  const DP = new Set(['DATE','PLAC']);
+  const blocks = groupL1Blocks(fam.raw_lines.slice(1));
+  const chilModel = new Set(fam.chil);
+  const handledChil = new Set();
+  const seenTags = new Set(blocks.map(b => b.tag));
+
+  for (const { tag, firstLine, sublines } of blocks) {
+    switch (tag) {
+      case 'HUSB': if (fam.husb) out.push(`1 HUSB ${fam.husb}`); break;
+      case 'WIFE': if (fam.wife) out.push(`1 WIFE ${fam.wife}`); break;
+      case 'CHIL': {
+        const cid = firstLine.trimEnd().split(' ')[2];
+        if (chilModel.has(cid)) { out.push(firstLine); handledChil.add(cid); }
+        break;
+      }
+      case 'MARR':
+        out.push('1 MARR');
+        if (fam.marr_date) out.push(`2 DATE ${fam.marr_date}`);
+        if (fam.marr_plac) out.push(`2 PLAC ${fam.marr_plac}`);
+        passthroughExtras(out, sublines, DP);
+        break;
+      case 'DIV':
+        out.push('1 DIV');
+        if (fam.div_date) out.push(`2 DATE ${fam.div_date}`);
+        if (fam.div_plac) out.push(`2 PLAC ${fam.div_plac}`);
+        passthroughExtras(out, sublines, DP);
+        break;
+      default:
+        out.push(firstLine, ...sublines);
     }
+  }
+  for (const cid of fam.chil) if (!handledChil.has(cid)) out.push(`1 CHIL ${cid}`);
+  if (!seenTags.has('HUSB') && fam.husb) out.push(`1 HUSB ${fam.husb}`);
+  if (!seenTags.has('WIFE') && fam.wife) out.push(`1 WIFE ${fam.wife}`);
+  if (!seenTags.has('MARR') && (fam.marr_date||fam.marr_plac)) {
+    out.push('1 MARR');
+    if (fam.marr_date) out.push(`2 DATE ${fam.marr_date}`);
+    if (fam.marr_plac) out.push(`2 PLAC ${fam.marr_plac}`);
+  }
+  if (!seenTags.has('DIV') && (fam.div_date||fam.div_plac)) {
+    out.push('1 DIV');
+    if (fam.div_date) out.push(`2 DATE ${fam.div_date}`);
+    if (fam.div_plac) out.push(`2 PLAC ${fam.div_plac}`);
+  }
+  return out;
+}
+
+function buildFreshFamLines(fam) {
+  const out = [`0 ${fam.id} FAM`];
+  if (fam.husb) out.push(`1 HUSB ${fam.husb}`);
+  if (fam.wife) out.push(`1 WIFE ${fam.wife}`);
+  for (const cid of fam.chil) out.push(`1 CHIL ${cid}`);
+  if (fam.marr_date||fam.marr_plac) { out.push('1 MARR'); if (fam.marr_date) out.push(`2 DATE ${fam.marr_date}`); if (fam.marr_plac) out.push(`2 PLAC ${fam.marr_plac}`); }
+  if (fam.div_date||fam.div_plac)   { out.push('1 DIV');  if (fam.div_date)  out.push(`2 DATE ${fam.div_date}`);  if (fam.div_plac)  out.push(`2 PLAC ${fam.div_plac}`);  }
+  return out;
+}
+
+// ── EXPORT ──────────────────────────────────────────────────────────────────
+
+function exportGED() {
+  const lines = [];
+
+  // HEAD: use original if available (update DATE line), else construct minimal
+  const dateStr = new Date().toLocaleDateString(
+    lang==='de'?'de-DE':lang==='es'?'es-ES':'en-GB',
+    {day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
+  if (rawHead.length > 0) {
+    for (const line of rawHead) {
+      const parts = line.trimEnd().split(' ');
+      if (parseInt(parts[0])===1 && parts[1]==='DATE') lines.push(`1 DATE ${dateStr}`);
+      else lines.push(line);
+    }
+  } else {
+    lines.push('0 HEAD','1 GEDC','2 VERS 5.5.1','2 FORM LINEAGE-LINKED',
+      '1 CHAR UTF-8',`1 DATE ${dateStr}`,'1 NOTE Exported from GEDCOM Editor');
+  }
+
+  // INDI records (round-trip)
+  for (const p of Object.values(persons)) {
+    for (const line of buildIndiLines(p)) lines.push(line);
+  }
+
+  // FAM records (round-trip)
+  for (const fam of Object.values(families)) {
+    for (const line of buildFamLines(fam)) lines.push(line);
+  }
+
+  // Passthrough records: SUBM, SOUR, NOTE, REPO (preserved verbatim)
+  for (const rec of rawPassthrough) {
+    for (const line of rec) lines.push(line);
   }
 
   lines.push('0 TRLR');
