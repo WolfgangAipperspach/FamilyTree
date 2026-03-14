@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persons-index.schema.json",
+  "title": "Persons Index",
+  "description": "Derived index of all persons in a FamilyTree dataset, stored at .familytree/persons-index.json",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["id"],
+    "properties": {
+      "id": {
+        "type": "string",
+        "format": "uuid",
+        "description": "UUID v4 — matches the person filename"
+      },
+      "name": {
+        "type": "object",
+        "properties": {
+          "given":   { "type": "string" },
+          "surname": { "type": "string" },
+          "alias":   { "type": "string" }
+        },
+        "additionalProperties": false
+      },
+      "sex": {
+        "type": "string",
+        "enum": ["M", "F", "X"]
+      },
+      "birth": {
+        "type": ["object", "null"],
+        "properties": {
+          "date":  { "type": "string" },
+          "place": { "type": "string" }
+        },
+        "additionalProperties": false
+      },
+      "death": {
+        "type": ["object", "null"],
+        "properties": {
+          "date":  { "type": "string" },
+          "place": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "additionalProperties": false
+  }
+}

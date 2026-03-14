@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "relations-index.schema.json",
+  "title": "Relations Index",
+  "description": "Derived index of all relations in a FamilyTree dataset, stored at .familytree/relations-index.json",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["id", "type"],
+    "oneOf": [
+      {
+        "title": "filiation",
+        "required": ["id", "type", "parent", "child"],
+        "properties": {
+          "id":     { "type": "string", "format": "uuid" },
+          "type":   { "type": "string", "const": "filiation" },
+          "parent": { "type": "string", "format": "uuid" },
+          "child":  { "type": "string", "format": "uuid" }
+        },
+        "additionalProperties": false
+      },
+      {
+        "title": "partner",
+        "required": ["id", "type", "persons"],
+        "properties": {
+          "id":      { "type": "string", "format": "uuid" },
+          "type":    { "type": "string", "const": "partner" },
+          "persons": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" },
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "additionalProperties": false
+      }
+    ]
+  }
+}

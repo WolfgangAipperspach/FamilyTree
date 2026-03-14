@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "familytree.schema.json",
+  "title": "FamilyTree",
+  "description": "Single control file for a FamilyTree dataset, stored at .familytree/familytree.json",
+  "type": "object",
+  "required": ["format", "version", "id"],
+  "properties": {
+    "format": {
+      "type": "string",
+      "const": "familytree",
+      "description": "Always 'familytree' — identifies the format"
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version of the spec this dataset conforms to"
+    },
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "UUID v4 — the tree's stable identity"
+    },
+    "not_duplicates": {
+      "description": "Pairs of persons confirmed to be distinct individuals, suppressed from ft find-duplicates output",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["persons"],
+        "properties": {
+          "persons": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "note": {
+            "type": "string",
+            "description": "Free-text reason why these persons are distinct"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
