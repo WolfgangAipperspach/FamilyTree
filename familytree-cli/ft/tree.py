@@ -6,7 +6,7 @@ import json
 import uuid
 from pathlib import Path
 
-FAMILYTREE_VERSION = "0.1.0"
+FAMILYTREE_VERSION = "0.0.1"
 _CONTROL_FILE = ".familytree.json"
 _CACHE_DIR = ".familytree"
 

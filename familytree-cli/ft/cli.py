@@ -709,9 +709,10 @@ def relation_remove(ctx: click.Context, uuid_prefix: str) -> None:
 
 @main.command("find-duplicates")
 @click.option("--threshold", default=80, show_default=True, help="Minimum similarity score (0-100).")
+@click.option("--no-wizard", is_flag=True, default=False, help="Just list candidates, no interactive prompts.")
 @click.pass_context
-def cmd_find_duplicates(ctx: click.Context, threshold: int) -> None:
-    """Find potential duplicate persons."""
+def cmd_find_duplicates(ctx: click.Context, threshold: int, no_wizard: bool) -> None:
+    """Find potential duplicate persons and optionally resolve them interactively."""
     root = _require_root(ctx)
     persons = load_persons_index(root)
     ctrl = load_control(root)
@@ -725,16 +726,128 @@ def cmd_find_duplicates(ctx: click.Context, threshold: int) -> None:
         return
 
     if not duplicates:
-        click.echo("No duplicates found.")
+        click.echo("No potential duplicates found.")
         return
 
-    for pair in duplicates:
-        a = pair["person_a"]
-        b = pair["person_b"]
+    if no_wizard:
+        for pair in duplicates:
+            a = pair["person_a"]
+            b = pair["person_b"]
+            score = pair["score"]
+            click.echo(f"Score {score:3d}  {a['uuid'][:8]} {full_name(a.get('name'))}  vs  {b['uuid'][:8]} {full_name(b.get('name'))}")
+        return
+
+    # --- Interactive wizard ---
+    total = len(duplicates)
+    click.echo(f"\nFound {total} potential duplicate pair(s). Reviewing each in turn.\n")
+
+    merged = 0
+    skipped = 0
+    marked_not_dup = 0
+
+    for idx, pair in enumerate(duplicates, 1):
+        a_idx = pair["person_a"]
+        b_idx = pair["person_b"]
         score = pair["score"]
-        a_name = full_name(a.get("name"))
-        b_name = full_name(b.get("name"))
-        click.echo(f"Score {score:3d}  {a['uuid'][:8]} {a_name}  vs  {b['uuid'][:8]} {b_name}")
+
+        # Load full person records for detailed display
+        a_full_result = find_person(root, a_idx["uuid"])
+        b_full_result = find_person(root, b_idx["uuid"])
+        a_data = a_full_result[0] if a_full_result else a_idx
+        b_data = b_full_result[0] if b_full_result else b_idx
+
+        click.echo("=" * 60)
+        click.echo(f"Pair {idx} of {total}  —  similarity score: {score}/100")
+        click.echo("")
+        click.echo("--- Person A ---")
+        click.echo(person_detail(a_data))
+        click.echo("")
+        click.echo("--- Person B ---")
+        click.echo(person_detail(b_data))
+        click.echo("")
+
+        choice = click.prompt(
+            "Action: [s]kip  [m]erge (keep A, delete B)  [n]ot a duplicate  [N]ot a duplicate + remember",
+            type=click.Choice(["s", "m", "n", "N"], case_sensitive=True),
+            default="s",
+            show_choices=False,
+        )
+
+        if choice == "s":
+            skipped += 1
+            click.echo("Skipped.\n")
+
+        elif choice == "m":
+            # Merge: copy non-null fields from B into A where A has no value, then delete B
+            a_path_result = find_person(root, a_idx["uuid"])
+            b_path_result = find_person(root, b_idx["uuid"])
+            if not a_path_result or not b_path_result:
+                click.echo("Could not load one of the persons. Skipping.")
+                skipped += 1
+                continue
+            a_data_live, a_folder = a_path_result
+            b_data_live, b_folder = b_path_result
+
+            # Merge scalar/list fields from B into A where A is empty/null
+            skip_fields = {"uuid", "familytree_version", "created", "changed"}
+            for field, val in b_data_live.items():
+                if field in skip_fields:
+                    continue
+                existing = a_data_live.get(field)
+                if existing is None or existing == [] or existing == "":
+                    a_data_live[field] = val
+
+            # Update relations that reference B to point to A instead
+            from datetime import datetime, timezone
+            a_data_live["changed"] = datetime.now(timezone.utc).isoformat()
+            save_person(a_folder.parent, a_data_live)
+            upsert_person(root, a_data_live)
+
+            # Re-point any relations from B → A
+            for rel_data, rel_folder in scan_relations(root):
+                changed = False
+                for field in ("parent", "child", "from", "to"):
+                    if rel_data.get(field) == b_idx["uuid"]:
+                        rel_data[field] = a_idx["uuid"]
+                        changed = True
+                persons_list = rel_data.get("persons")
+                if isinstance(persons_list, list) and b_idx["uuid"] in persons_list:
+                    rel_data["persons"] = [
+                        a_idx["uuid"] if p == b_idx["uuid"] else p
+                        for p in persons_list
+                    ]
+                    changed = True
+                if changed:
+                    rel_data["changed"] = datetime.now(timezone.utc).isoformat()
+                    save_relation(rel_folder.parent, rel_data)
+                    upsert_relation(root, rel_data)
+
+            # Delete B
+            delete_person(root, b_idx["uuid"])
+            remove_person(root, b_idx["uuid"])
+
+            merged += 1
+            click.echo(f"Merged {b_idx['uuid'][:8]} into {a_idx['uuid'][:8]}. Person B deleted.\n")
+
+        elif choice == "n":
+            skipped += 1
+            click.echo("Noted as not a duplicate (not remembered).\n")
+
+        elif choice == "N":
+            note = click.prompt("Optional note (leave blank to skip)", default="")
+            ctrl = load_control(root)
+            not_dups = ctrl.get("not_duplicates") or []
+            entry: dict = {"persons": [a_idx["uuid"], b_idx["uuid"]]}
+            if note:
+                entry["note"] = note
+            not_dups.append(entry)
+            ctrl["not_duplicates"] = not_dups
+            save_control(root, ctrl)
+            marked_not_dup += 1
+            click.echo(f"Remembered {a_idx['uuid'][:8]} and {b_idx['uuid'][:8]} as not duplicates.\n")
+
+    click.echo("=" * 60)
+    click.echo(f"Done. {merged} merged · {marked_not_dup} remembered as not-duplicate · {skipped} skipped.")
 
 
 # ---------------------------------------------------------------------------
