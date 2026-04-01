@@ -193,6 +193,36 @@ header h1 { font-size: 0.95em; color: #fbbf24; white-space: nowrap; }
 #tip .t-row  { color: #9ca3af; margin-top: 2px; }
 #tip .t-row span { color: #e5e7eb; }
 
+/* ── List View ─────────────────────────────────────────────────────────────── */
+#listWrap {
+  position: absolute; inset: 0; display: none;
+  overflow-y: auto; background: #111827; z-index: 5;
+}
+#listWrap.visible { display: block; }
+#listTable { width: 100%; border-collapse: collapse; font-size: 0.8em; }
+#listTable thead th {
+  position: sticky; top: 0; background: #1f2937;
+  border-bottom: 2px solid #374151; padding: 8px 12px;
+  text-align: left; color: #9ca3af; cursor: pointer; user-select: none; white-space: nowrap;
+}
+#listTable thead th:hover { color: #fbbf24; }
+#listTable thead th.sort-asc::after  { content: ' \2191'; color: #fbbf24; }
+#listTable thead th.sort-desc::after { content: ' \2193'; color: #fbbf24; }
+#listTable tbody tr { border-bottom: 1px solid #1a2235; cursor: pointer; }
+#listTable tbody tr:hover { background: #1f2937; }
+#listTable tbody tr.list-selected { background: #2d2008; outline: 2px solid #fbbf24; outline-offset: -2px; }
+#listTable tbody td { padding: 6px 12px; color: #d1d5db; }
+#listTable .sex-m { color: #60a5fa; font-weight: bold; }
+#listTable .sex-f { color: #f472b6; font-weight: bold; }
+#listTable .cell-id { color: #4b5563; font-size: 0.88em; }
+#listTable .cell-surn { font-weight: bold; color: #f3f4f6; }
+
+/* ── View Toggle ───────────────────────────────────────────────────────────── */
+.view-toggle { display: flex; gap: 2px; background: #111827; border-radius: 5px; padding: 2px; }
+.view-btn { background: transparent; border: none; color: #6b7280; padding: 3px 10px; border-radius: 4px; cursor: pointer; font-size: 0.78em; }
+.view-btn.active { background: #374151; color: #fbbf24; }
+.view-btn:hover:not(.active) { color: #d1d5db; }
+
 /* ── Legend ────────────────────────────────────────────────────────────── */
 #legend {
   position: absolute; bottom: 12px; right: 12px; z-index: 10;
@@ -214,16 +244,23 @@ header h1 { font-size: 0.95em; color: #fbbf24; white-space: nowrap; }
   <input type="file" id="fileInput" accept=".ged">
   <span id="statsEl" data-i18n-attr="noFile">No file loaded</span>
   <span class="ctrl-sep">|</span>
-  <div class="ctrl">Hops: <input type="range" id="slHops" min="1" max="6" value="2">
+  <div class="ctrl network-ctrl">Hops: <input type="range" id="slHops" min="1" max="6" value="2">
     <span id="hopsVal">2</span></div>
-  <div class="ctrl"><span data-i18n="force">Force</span>: <input type="range" id="slForce" min="-400" max="-20" value="-180"></div>
-  <div class="ctrl"><span data-i18n="link">Link</span>: <input type="range" id="slLink" min="30" max="200" value="80"></div>
-  <div class="ctrl"><label><input type="checkbox" id="chkNames" checked> <span data-i18n="names">Names</span></label></div>
+  <div class="ctrl network-ctrl"><span data-i18n="force">Force</span>: <input type="range" id="slForce" min="-400" max="-20" value="-180"></div>
+  <div class="ctrl network-ctrl"><span data-i18n="link">Link</span>: <input type="range" id="slLink" min="30" max="200" value="80"></div>
+  <div class="ctrl network-ctrl"><label><input type="checkbox" id="chkNames" checked> <span data-i18n="names">Names</span></label></div>
   <div id="headerSearchWrap" class="ctrl">
     <input type="text" id="searchInput" data-i18n-placeholder="searchPerson" placeholder="Search person…" autocomplete="off">
     <div id="searchDropdown"></div>
   </div>
   <button class="btn-sm" id="btnReset" data-i18n="reset">Reset</button>
+  <span class="ctrl-sep">|</span>
+  <div class="view-toggle">
+    <button class="view-btn active" id="btnViewNetwork">&#9108; Network</button>
+    <button class="view-btn" id="btnViewTree">&#127795; Tree</button>
+    <button class="view-btn" id="btnViewFan">&#9728; Fan</button>
+    <button class="view-btn" id="btnViewList">&#9776; List</button>
+  </div>
   <span class="ctrl-sep">|</span>
   <select id="langSel" class="btn-sm" title="Language / Sprache / Idioma" style="padding:3px 6px">
     <option value="en" selected>EN</option>
@@ -318,6 +355,22 @@ header h1 { font-size: 0.95em; color: #fbbf24; white-space: nowrap; }
   <!-- ── Canvas ── -->
   <div id="canvas-wrap">
     <svg id="canvas"></svg>
+
+    <!-- List view -->
+    <div id="listWrap">
+      <table id="listTable">
+        <thead><tr>
+          <th data-col="givn">Given name</th>
+          <th data-col="surn">Surname</th>
+          <th data-col="birth_date">Born</th>
+          <th data-col="birth_plac">Birth place</th>
+          <th data-col="deat_date">Died</th>
+          <th data-col="sex">Sex</th>
+          <th data-col="id">ID</th>
+        </tr></thead>
+        <tbody id="listBody"></tbody>
+      </table>
+    </div>
 
     <!-- Search overlay shown before any selection -->
     <div id="searchOverlay">
@@ -922,9 +975,8 @@ function renderSubgraph(personId, hops) {
 // ══════════════════════════════════════════════════════════════════
 function selectPerson(id) {
   selectedId = id;
-  const hops = +document.getElementById('slHops').value;
   document.getElementById('searchOverlay').classList.add('hidden');
-  renderSubgraph(id, hops);
+  rerender();
   openPanel(id);
 }
 
@@ -1078,7 +1130,7 @@ function savePersonEdits() {
   p.resi_plac  = document.getElementById('fResiPlac').value.trim();
   p.note       = document.getElementById('fNote').value;
   document.getElementById('panelTitle').textContent = personName(p);
-  renderSubgraph(selectedId, +document.getElementById('slHops').value);
+  rerender();
   updateStatsEl();
 }
 
@@ -1132,7 +1184,7 @@ function addSpouse(personId, spouseId) {
   if (!pa.fams.includes(famId)) pa.fams.push(famId);
   if (!pb.fams.includes(famId)) pb.fams.push(famId);
   renderLinks(personId);
-  renderSubgraph(selectedId, +document.getElementById('slHops').value);
+  rerender();
 }
 
 function removeSpouseLink(famId, personId) {
@@ -1144,7 +1196,7 @@ function removeSpouseLink(famId, personId) {
   if (other && persons[other]) persons[other].fams = persons[other].fams.filter(f => f !== famId);
   cleanFam(famId);
   renderLinks(personId);
-  renderSubgraph(selectedId, +document.getElementById('slHops').value);
+  rerender();
 }
 
 function addChild(parentId, childId) {
@@ -1165,7 +1217,7 @@ function addChild(parentId, childId) {
   if (!fam.chil.includes(childId)) fam.chil.push(childId);
   if (!persons[childId].famc.includes(famId)) persons[childId].famc.push(famId);
   renderLinks(selectedId);
-  renderSubgraph(selectedId, +document.getElementById('slHops').value);
+  rerender();
 }
 
 function removeChildLink(famId, childId) {
@@ -1175,7 +1227,7 @@ function removeChildLink(famId, childId) {
   if (persons[childId]) persons[childId].famc = persons[childId].famc.filter(f => f !== famId);
   cleanFam(famId);
   renderLinks(selectedId);
-  renderSubgraph(selectedId, +document.getElementById('slHops').value);
+  rerender();
 }
 
 function addParent(childId, parentId) {
@@ -1197,7 +1249,7 @@ function addParent(childId, parentId) {
   else { fam.wife = parentId; }
   if (!pp.fams.includes(famId)) pp.fams.push(famId);
   renderLinks(childId);
-  renderSubgraph(selectedId, +document.getElementById('slHops').value);
+  rerender();
 }
 
 function removeParentLink(famId, childId) {
@@ -1207,7 +1259,7 @@ function removeParentLink(famId, childId) {
   persons[childId].famc = persons[childId].famc.filter(f => f !== famId);
   cleanFam(famId);
   renderLinks(childId);
-  renderSubgraph(selectedId, +document.getElementById('slHops').value);
+  rerender();
 }
 
 function cleanFam(famId) {
@@ -1630,13 +1682,19 @@ document.getElementById('fileInput').addEventListener('change', function() {
   const reader = new FileReader();
   reader.onload = e => {
     parseGED(e.target.result);
-    selectedId = null;
-    document.getElementById('panel').classList.remove('open');
-    document.getElementById('searchOverlay').classList.remove('hidden');
     document.getElementById('searchInput').value = '';
     document.getElementById('searchDropdown').innerHTML = '';
     updateStatsEl();
-    gRoot.selectAll('*').remove();
+    const ids = Object.keys(persons);
+    if (ids.length) {
+      switchView('network');
+      selectPerson(ids[Math.floor(Math.random() * ids.length)]);
+    } else {
+      selectedId = null;
+      document.getElementById('panel').classList.remove('open');
+      document.getElementById('searchOverlay').classList.remove('hidden');
+      gRoot.selectAll('*').remove();
+    }
   };
   reader.readAsText(file);
   this.value = '';
@@ -1651,11 +1709,373 @@ function updateStatsEl() {
 }
 
 // ══════════════════════════════════════════════════════════════════
+// VIEW SWITCHING
+// ══════════════════════════════════════════════════════════════════
+let currentView = 'network';
+
+function switchView(view) {
+  currentView = view;
+  ['network','tree','fan','list'].forEach(v =>
+    document.getElementById('btnView' + v[0].toUpperCase() + v.slice(1)).classList.toggle('active', v === view)
+  );
+  document.querySelectorAll('.network-ctrl').forEach(el => {
+    el.style.display = view === 'network' ? '' : 'none';
+  });
+  const isList = view === 'list';
+  document.getElementById('canvas').style.display = isList ? 'none' : '';
+  document.getElementById('listWrap').classList.toggle('visible', isList);
+  rerender();
+}
+
+function rerender() {
+  if (currentView === 'list') { renderListView(); return; }
+  if (!selectedId) return;
+  if (currentView === 'tree') {
+    renderTreeView(selectedId);
+  } else if (currentView === 'fan') {
+    renderFanChart(selectedId);
+  } else {
+    renderSubgraph(selectedId, +document.getElementById('slHops').value);
+  }
+}
+
+document.getElementById('btnViewNetwork').addEventListener('click', () => switchView('network'));
+document.getElementById('btnViewTree').addEventListener('click', () => switchView('tree'));
+document.getElementById('btnViewFan').addEventListener('click', () => switchView('fan'));
+document.getElementById('btnViewList').addEventListener('click', () => switchView('list'));
+
+// ══════════════════════════════════════════════════════════════════
+// TREE VIEW
+// ══════════════════════════════════════════════════════════════════
+function renderTreeView(personId) {
+  gRoot.selectAll('*').remove();
+  simulation.stop();
+  if (!personId || !persons[personId]) return;
+
+  const cx = W / 2, cy = H / 2;
+  const NW = 130, NH = 54, HGAP = 16, VGAP = 34;
+
+  function trunc(s, n) {
+    s = (s || '').trim();
+    return s.length > n ? s.slice(0, n - 1) + '\u2026' : s;
+  }
+
+  // Build ancestor tree: root = selected person, children = their parents
+  const ancVis = new Set();
+  function buildAnc(id, gen) {
+    if (gen > 3 || !id || !persons[id] || ancVis.has(id)) return null;
+    ancVis.add(id);
+    const p = persons[id];
+    const children = [];
+    for (const famId of p.famc) {
+      const fam = families[famId];
+      if (!fam) continue;
+      if (fam.husb) { const n = buildAnc(fam.husb, gen + 1); if (n) children.push(n); }
+      if (fam.wife) { const n = buildAnc(fam.wife, gen + 1); if (n) children.push(n); }
+    }
+    return { id, p, children };
+  }
+
+  // Build descendant tree: root = selected person, children = their children
+  const descVis = new Set();
+  function buildDesc(id, gen) {
+    if (gen > 3 || !id || !persons[id] || descVis.has(id)) return null;
+    descVis.add(id);
+    const p = persons[id];
+    const childIds = new Set();
+    for (const famId of p.fams) {
+      const fam = families[famId];
+      if (fam) fam.chil.forEach(c => childIds.add(c));
+    }
+    const children = [];
+    for (const cId of childIds) {
+      const n = buildDesc(cId, gen + 1);
+      if (n) children.push(n);
+    }
+    return { id, p, children };
+  }
+
+  const ancData  = buildAnc(personId, 0);
+  const descData = buildDesc(personId, 0);
+
+  const treeLayout = d3.tree().nodeSize([NW + HGAP, NH + VGAP]);
+  const ancHier  = ancData  ? d3.hierarchy(ancData)  : null;
+  const descHier = descData ? d3.hierarchy(descData) : null;
+  if (ancHier)  treeLayout(ancHier);
+  if (descHier) treeLayout(descHier);
+
+  const linkG = gRoot.append('g');
+  const nodeG = gRoot.append('g');
+
+  function drawLink(sx, sy, tx, ty, color) {
+    const my = (sy + ty) / 2;
+    linkG.append('path')
+      .attr('d', `M${sx},${sy} C${sx},${my} ${tx},${my} ${tx},${ty}`)
+      .attr('stroke', color).attr('stroke-width', 1.5)
+      .attr('fill', 'none').attr('opacity', 0.7);
+  }
+
+  // Ancestors go upward (negate y)
+  if (ancHier) {
+    for (const lk of ancHier.links())
+      drawLink(cx + lk.source.x, cy - lk.source.y, cx + lk.target.x, cy - lk.target.y, '#4b5563');
+  }
+  // Descendants go downward
+  if (descHier) {
+    for (const lk of descHier.links())
+      drawLink(cx + lk.source.x, cy + lk.source.y, cx + lk.target.x, cy + lk.target.y, '#374151');
+  }
+
+  const drawnIds = new Set();
+
+  function drawTreeNode(x, y, data, isSelected) {
+    if (drawnIds.has(data.id)) return;
+    drawnIds.add(data.id);
+    const p = data.p;
+
+    const g = nodeG.append('g')
+      .attr('transform', `translate(${x - NW / 2},${y - NH / 2})`)
+      .style('cursor', 'pointer')
+      .on('click', () => selectPerson(data.id));
+
+    g.append('rect')
+      .attr('width', NW).attr('height', NH).attr('rx', 6).attr('ry', 6)
+      .attr('fill', colFill[p.sex] || colFill.U)
+      .attr('stroke', isSelected ? '#fbbf24' : (colStroke[p.sex] || colStroke.U))
+      .attr('stroke-width', isSelected ? 2.5 : 1.5)
+      .attr('opacity', 0.9);
+
+    g.append('text')
+      .attr('x', NW / 2).attr('y', 17)
+      .attr('text-anchor', 'middle').attr('font-size', '10.5px')
+      .attr('fill', '#f3f4f6').attr('font-weight', 'bold').attr('pointer-events', 'none')
+      .text(trunc(((p.givn || '') + ' ' + (p.surn || '')).trim() || p.id, 18));
+
+    const life = [p.birth_date ? 'b. ' + p.birth_date : '', p.deat_date ? '\u2020 ' + p.deat_date : '']
+      .filter(Boolean).join('  ');
+    if (life) g.append('text')
+      .attr('x', NW / 2).attr('y', 31)
+      .attr('text-anchor', 'middle').attr('font-size', '8px')
+      .attr('fill', '#9ca3af').attr('pointer-events', 'none')
+      .text(trunc(life, 24));
+
+    const place = p.birth_plac || p.deat_plac || '';
+    if (place) g.append('text')
+      .attr('x', NW / 2).attr('y', 44)
+      .attr('text-anchor', 'middle').attr('font-size', '7.5px')
+      .attr('fill', '#6b7280').attr('pointer-events', 'none')
+      .text(trunc(place, 24));
+
+    g.on('mouseover', (e) => {
+      tip.innerHTML = [
+        `<div class="t-name">${personName(p)}${p.nick ? ` <span style="color:#9ca3af;font-size:0.85em">"${p.nick}"</span>` : ''}</div>`,
+        p.titl       ? `<div class="t-row">${p.titl}</div>` : '',
+        p.birth_date ? `<div class="t-row">${t('born')}: <span>${p.birth_date}${p.birth_plac ? ', ' + p.birth_plac : ''}</span></div>` : '',
+        p.deat_date  ? `<div class="t-row">${t('died')}: <span>${p.deat_date}${p.deat_plac ? ', ' + p.deat_plac : ''}</span></div>` : '',
+        (p.occu || []).length ? `<div class="t-row">${t('occu2')}: <span>${p.occu.join(', ')}</span></div>` : '',
+        `<div class="t-row">ID: <span>${data.id}</span></div>`,
+      ].join('');
+      tip.style.display = 'block';
+    })
+    .on('mousemove', e => { tip.style.left = (e.clientX + 14) + 'px'; tip.style.top = (e.clientY - 10) + 'px'; })
+    .on('mouseout',  () => { tip.style.display = 'none'; });
+  }
+
+  if (ancHier)  ancHier.each(n  => drawTreeNode(cx + n.x, cy - n.y, n.data, n.data.id === personId));
+  if (descHier) descHier.each(n => { if (n.data.id !== personId) drawTreeNode(cx + n.x, cy + n.y, n.data, false); });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// LIST VIEW
+// ══════════════════════════════════════════════════════════════════
+let listSortCol = 'surn', listSortDir = 1;
+
+function renderListView() {
+  const tbody = document.getElementById('listBody');
+  tbody.innerHTML = '';
+
+  const rows = Object.values(persons);
+  rows.sort((a, b) => {
+    const av = (a[listSortCol] || '').toString().toLowerCase();
+    const bv = (b[listSortCol] || '').toString().toLowerCase();
+    return av < bv ? -listSortDir : av > bv ? listSortDir : 0;
+  });
+
+  for (const p of rows) {
+    const tr = document.createElement('tr');
+    if (p.id === selectedId) tr.classList.add('list-selected');
+    tr.innerHTML = `
+      <td>${p.givn || ''}</td>
+      <td class="cell-surn">${p.surn || ''}</td>
+      <td>${p.birth_date || ''}</td>
+      <td>${p.birth_plac || ''}</td>
+      <td>${p.deat_date || ''}</td>
+      <td class="sex-${(p.sex || 'u').toLowerCase()}">${p.sex || ''}</td>
+      <td class="cell-id">${p.id}</td>`;
+    tr.addEventListener('click', () => {
+      selectedId = p.id;
+      openPanel(p.id);
+      document.querySelectorAll('#listBody tr').forEach(r => r.classList.remove('list-selected'));
+      tr.classList.add('list-selected');
+    });
+    tbody.appendChild(tr);
+  }
+
+  // Update sort indicators
+  document.querySelectorAll('#listTable thead th').forEach(th => {
+    th.classList.remove('sort-asc', 'sort-desc');
+    if (th.dataset.col === listSortCol)
+      th.classList.add(listSortDir === 1 ? 'sort-asc' : 'sort-desc');
+  });
+}
+
+// Sort on header click
+document.getElementById('listTable').addEventListener('click', e => {
+  const th = e.target.closest('th[data-col]');
+  if (!th) return;
+  const col = th.dataset.col;
+  if (col === listSortCol) { listSortDir *= -1; } else { listSortCol = col; listSortDir = 1; }
+  renderListView();
+});
+
+// ══════════════════════════════════════════════════════════════════
+// FAN CHART VIEW
+// ══════════════════════════════════════════════════════════════════
+function renderFanChart(personId) {
+  gRoot.selectAll('*').remove();
+  simulation.stop();
+  if (!personId || !persons[personId]) return;
+
+  const cx = W / 2, cy = H / 2;
+  const MAX_GEN = 5;
+  const CENTER_R = 52;
+  const availR = Math.min(W, H) / 2 - 12;
+  const RING_W = (availR - CENTER_R) / MAX_GEN;
+
+  function trunc(s, n) { s = (s||'').trim(); return s.length > n ? s.slice(0, n-1) + '\u2026' : s; }
+
+  // Build pedigree map: index 1=selected, 2=father, 3=mother, 4=pat.gf, 5=pat.gm ...
+  const ped = {};
+  function fill(id, idx, gen) {
+    if (gen > MAX_GEN || !id || !persons[id]) return;
+    ped[idx] = id;
+    const p = persons[id];
+    for (const famId of p.famc) {
+      const fam = families[famId];
+      if (!fam) continue;
+      if (fam.husb) fill(fam.husb, idx * 2,     gen + 1);
+      if (fam.wife) fill(fam.wife, idx * 2 + 1, gen + 1);
+      break; // only first family
+    }
+  }
+  fill(personId, 1, 0);
+
+  const rootG = gRoot.append('g').attr('transform', `translate(${cx},${cy})`);
+
+  function showTip(e, p, id) {
+    tip.innerHTML = [
+      `<div class="t-name">${personName(p)}${p.nick ? ` <span style="color:#9ca3af;font-size:0.85em">"${p.nick}"</span>` : ''}</div>`,
+      p.titl       ? `<div class="t-row">${p.titl}</div>` : '',
+      p.birth_date ? `<div class="t-row">${t('born')}: <span>${p.birth_date}${p.birth_plac ? ', ' + p.birth_plac : ''}</span></div>` : '',
+      p.deat_date  ? `<div class="t-row">${t('died')}: <span>${p.deat_date}${p.deat_plac ? ', ' + p.deat_plac : ''}</span></div>` : '',
+      (p.occu||[]).length ? `<div class="t-row">${t('occu2')}: <span>${p.occu.join(', ')}</span></div>` : '',
+      `<div class="t-row">ID: <span>${id}</span></div>`,
+    ].join('');
+    tip.style.display = 'block';
+  }
+
+  // ── Center circle (selected person) ──
+  const cp = persons[personId];
+  const cg = rootG.append('g').style('cursor', 'pointer').on('click', () => selectPerson(personId));
+  cg.append('circle').attr('r', CENTER_R - 2)
+    .attr('fill', colFill[cp.sex] || colFill.U)
+    .attr('stroke', '#fbbf24').attr('stroke-width', 2.5);
+  cg.append('text').attr('text-anchor', 'middle').attr('dy', '-0.55em')
+    .attr('font-size', '11px').attr('fill', '#f3f4f6').attr('font-weight', 'bold').attr('pointer-events', 'none')
+    .text(trunc(cp.givn || '', 11));
+  cg.append('text').attr('text-anchor', 'middle').attr('dy', '0.7em')
+    .attr('font-size', '11px').attr('fill', '#f3f4f6').attr('font-weight', 'bold').attr('pointer-events', 'none')
+    .text(trunc(cp.surn || '', 11));
+  if (cp.birth_date) cg.append('text').attr('text-anchor', 'middle').attr('dy', '1.9em')
+    .attr('font-size', '8px').attr('fill', '#9ca3af').attr('pointer-events', 'none')
+    .text(cp.birth_date.match(/\d{4}/)?.[0] || '');
+  cg.on('mouseover', e => showTip(e, cp, personId))
+    .on('mousemove', e => { tip.style.left = (e.clientX + 14) + 'px'; tip.style.top = (e.clientY - 10) + 'px'; })
+    .on('mouseout', () => { tip.style.display = 'none'; });
+
+  // ── Ancestor rings ──
+  for (let gen = 1; gen <= MAX_GEN; gen++) {
+    const innerR = CENTER_R + (gen - 1) * RING_W;
+    const outerR = CENTER_R + gen * RING_W;
+    const count  = 1 << gen;           // 2^gen arcs in this ring
+    const sweep  = (2 * Math.PI) / count;
+
+    for (let i = 0; i < count; i++) {
+      const idx = (1 << gen) + i;
+      const id  = ped[idx];
+      const sa  = i * sweep - Math.PI / 2;  // start at top, go clockwise
+      const ea  = sa + sweep;
+
+      const arcGen = d3.arc()
+        .innerRadius(innerR).outerRadius(outerR)
+        .startAngle(sa).endAngle(ea).padAngle(0.006);
+
+      const p = id ? persons[id] : null;
+      const ag = rootG.append('g');
+
+      ag.append('path')
+        .attr('d', arcGen())
+        .attr('fill',    p ? (colFill[p.sex]   || colFill.U)   : '#1f2937')
+        .attr('stroke',  '#111827').attr('stroke-width', 0.8)
+        .attr('opacity', p ? 0.85 : 0.15);
+
+      if (p) {
+        ag.style('cursor', 'pointer').on('click', () => selectPerson(id));
+        ag.on('mouseover', e => showTip(e, p, id))
+          .on('mousemove', e => { tip.style.left = (e.clientX + 14) + 'px'; tip.style.top = (e.clientY - 10) + 'px'; })
+          .on('mouseout', () => { tip.style.display = 'none'; });
+
+        if (gen <= 4) {
+          const [tx, ty] = arcGen.centroid();
+          // Rotate text to be readable along the radius
+          const angleDeg = Math.atan2(ty, tx) * 180 / Math.PI;
+          const rot = (angleDeg > 90 || angleDeg < -90) ? angleDeg + 180 : angleDeg;
+          const tg = rootG.append('g')
+            .attr('transform', `translate(${tx},${ty}) rotate(${rot})`)
+            .attr('pointer-events', 'none');
+
+          const fs = gen === 1 ? '11px' : gen === 2 ? '9.5px' : gen === 3 ? '8px' : '7px';
+          if (gen <= 3) {
+            tg.append('text').attr('text-anchor', 'middle')
+              .attr('dy', gen <= 2 ? '-0.45em' : '0.35em')
+              .attr('font-size', fs).attr('fill', '#f3f4f6').attr('font-weight', 'bold')
+              .text(trunc(p.givn || '', gen === 1 ? 13 : gen === 2 ? 10 : 8));
+            if (gen <= 2) {
+              tg.append('text').attr('text-anchor', 'middle').attr('dy', '0.75em')
+                .attr('font-size', fs).attr('fill', '#e5e7eb').attr('font-weight', 'bold')
+                .text(trunc(p.surn || '', gen === 1 ? 13 : 10));
+              if (p.birth_date) tg.append('text').attr('text-anchor', 'middle').attr('dy', '1.9em')
+                .attr('font-size', '7.5px').attr('fill', '#9ca3af')
+                .text(p.birth_date.match(/\d{4}/)?.[0] || '');
+            }
+          } else {
+            // gen 4: initial + surname only
+            tg.append('text').attr('text-anchor', 'middle').attr('dy', '0.35em')
+              .attr('font-size', fs).attr('fill', '#e5e7eb')
+              .text(((p.givn || '')[0] || '').toUpperCase() + '. ' + trunc(p.surn || '', 7));
+          }
+        }
+      }
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
 // CONTROLS
 // ══════════════════════════════════════════════════════════════════
 document.getElementById('slHops').addEventListener('input', function() {
   document.getElementById('hopsVal').textContent = this.value;
-  if (selectedId) renderSubgraph(selectedId, +this.value);
+  if (selectedId && currentView === 'network') renderSubgraph(selectedId, +this.value);
 });
 document.getElementById('slForce').addEventListener('input', function() {
   simulation.force('charge').strength(+this.value);
@@ -1669,8 +2089,10 @@ document.getElementById('chkNames').addEventListener('change', function() {
   if (labelSel) labelSel.attr('visibility', this.checked ? 'visible' : 'hidden');
 });
 document.getElementById('btnReset').addEventListener('click', () => {
-  if (nodeGroup) nodeGroup.each(d => { d.fx=null; d.fy=null; });
-  simulation.alpha(1).restart();
+  if (currentView === 'network') {
+    if (nodeGroup) nodeGroup.each(d => { d.fx=null; d.fy=null; });
+    simulation.alpha(1).restart();
+  }
   svg.transition().duration(400).call(zoom.transform, d3.zoomIdentity);
 });
 
