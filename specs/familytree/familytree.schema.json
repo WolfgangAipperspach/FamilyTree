@@ -2,20 +2,20 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "familytree.schema.json",
   "title": "FamilyTree",
-  "description": "Single control file for a FamilyTree dataset, stored at .familytree/familytree.json",
+  "description": "Control file for a FamilyTree dataset, stored at .familytree.json in the tree root. Its presence alongside persons/ and relations/ identifies the directory as a FamilyTree dataset.",
   "type": "object",
-  "required": ["format", "version", "id"],
+  "required": ["format", "familytree_version", "uuid"],
   "properties": {
     "format": {
       "type": "string",
       "const": "familytree",
       "description": "Always 'familytree' — identifies the format"
     },
-    "version": {
+    "familytree_version": {
       "type": "string",
-      "description": "Semantic version of the spec this dataset conforms to"
+      "description": "Semantic version of the FamilyTree spec this dataset conforms to (semver, e.g. '0.0.1')"
     },
-    "id": {
+    "uuid": {
       "type": "string",
       "format": "uuid",
       "description": "UUID v4 — the tree's stable identity"

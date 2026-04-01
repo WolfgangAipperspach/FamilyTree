@@ -44,10 +44,11 @@ A **person** is an individual with attributes describing their identity and life
 
 A **relation** links two persons. Relation types:
 
-| Type        | Directional | Description                                                  |
-|-------------|-------------|--------------------------------------------------------------|
-| `partner`   | No          | Two people in a couple (married, civil union, or common-law) |
-| `filiation` | Yes         | From parent to child — biological or adoptive                |
+| Type          | Directional | Description                                                              |
+|---------------|-------------|--------------------------------------------------------------------------|
+| `partner`     | No          | Two people in a couple (married, civil union, or common-law)             |
+| `filiation`   | Yes         | From parent to child — biological, legal, adoptive, step, donor, etc.   |
+| `association` | Yes         | Any other social or professional link (godfather, witness, employer, etc.) — not for guardianship, use `filiation` |
 
 A family unit is expressed as a set of individual relations, not a single record.
 
@@ -56,49 +57,68 @@ relations are considered siblings without an explicit link.
 
 ## File Format
 
-Each person and each relation is stored as a separate JSON file. The filename is the
-record's UUID v4 (e.g. `550e8400-e29b-41d4-a716-446655440000.json`), which is also
-stored as the `id` field inside the file.
+Each person is stored as a directory under `persons/` containing a `.person.json` file, and each relation is stored as a directory under `relations/` containing a `.relation.json` file. Directory names are arbitrary. The record's stable identity is the `uuid` field inside the JSON file.
 
 ### Directory Layout
 
-A tree can be stored in a directory with any name. The `.familytree/` subdirectory is the fixed format marker — its presence identifies the directory as a FamilyTree dataset. The tree's stable identity is its UUID, stored in `.familytree/familytree.json`, not derived from the directory name.
+A directory is a valid FamilyTree dataset when all three of the following are present:
+
+1. `.familytree.json` — the control file at the tree root
+2. `persons/` — the persons subfolder
+3. `relations/` — the relations subfolder
+
+The tree's stable identity is its UUID stored in `.familytree.json`, not derived from the directory name.
 
 ```
 my-tree/                    ← any name
-  .familytree/
-    familytree.json
+  .familytree.json
+  .familytree/              ← tooling cache (derived, not source of truth)
     persons-index.json
     relations-index.json
   persons/
-    550e8400-e29b-41d4-a716-446655440000.json
-    9b4e11a2-c3d4-e5f6-a7b8-c9d0e1f2a3b4.json
+    smith/                  ← optional grouping subfolder
+      jane-smith/           ← any folder name
+        .person.json
+        media/              ← optional, person-specific media
+          portrait-1955.jpg
+          birth-cert-1932.jpg
+    john-doe/
+      .person.json
   relations/
-    b109de44-f1a2-b3e4-c5d6-e7f8a9b0c1d2.json
-  media/
-    birth-cert-jane-smith-1932.jpg
-    smith-family-photo-1955.jpg
+    smith-doe/              ← optional grouping subfolder
+      jane-john-marriage/   ← any folder name
+        .relation.json
+        media/              ← optional, relation-specific media
+          wedding-1955.jpg
 ```
 
-The `.familytree/` subdirectory contains `familytree.json` (the control file) and the derived index files. The `media/` directory holds all media files referenced by persons, relations, and events. JSON schemas and the specification document live in `specs/familytree/` and are shared across all trees. The entire `.familytree/` directory and `media/` should be committed to Git alongside persons and relations.
+`.familytree.json` is the control file. The `.familytree/` subfolder holds derived index files used by tooling for fast lookup — it is not part of the format identity. JSON schemas and the specification document live in `specs/familytree/` and are shared across all trees. Both `.familytree.json` and the `.familytree/` folder should be committed to Git alongside persons and relations.
 
-### `media/`
+A person record is any directory under `persons/` that contains a `.person.json` file conforming to `specs/familytree/person.schema.json`. A relation record is any directory under `relations/` that contains a `.relation.json` file conforming to `specs/familytree/relation.schema.json`. Folder names are not significant — the record's stable identity is the `id` field inside the JSON file. Persons and relations may be freely grouped into nested subfolders for organisation. Tooling discovers records by scanning `persons/` and `relations/` recursively for `.person.json` and `.relation.json` files respectively.
 
-All media files for the tree — photographs, scanned documents, certificates, audio, video — are stored flat in `media/`. There is no required subdirectory structure within `media/`.
+Both person and relation folders may contain an optional `media/` subdirectory for related media files (photographs, scanned documents, certificates, wedding images, etc.). Values in `avatar_file` and `media_files` are resolved in order of the following three forms:
 
-`avatar_file` and `media_files` fields on persons, relations, and events reference files by path relative to the tree root (e.g. `media/birth-cert-jane-smith-1932.jpg`). External URLs are also valid values for these fields.
+- **Relative path** — resolved relative to the record's own folder (e.g. `media/portrait-1955.jpg` → `persons/jane-smith/media/portrait-1955.jpg`). Use this for files in the nearby `media/` subfolder.
+- **Absolute path** — a full filesystem path to a file located elsewhere.
+- **URI** — an `http`/`https` URI pointing to web-hosted content.
+
+### `media/` (per person and per relation)
+
+Person and relation folders may each contain an optional `media/` subdirectory holding any media files related to that record — photographs, scanned documents, certificates, wedding images, audio, video, etc.
+
+`avatar_file` and `media_files` accept a relative path (resolved from the record's own folder), an absolute filesystem path, or a URI (`http`/`https`).
 
 ### `familytree.json`
 
-Located at `.familytree/familytree.json`. The single control file for a FamilyTree dataset. Combines format declaration with manually managed dataset decisions. Tooling reads this file to verify compatibility before reading or writing any data.
+Located at `.familytree.json` in the tree root. The single control file for a FamilyTree dataset. Tooling reads this file to verify compatibility before reading or writing any data.
 
 Schema: `specs/familytree/familytree.schema.json`
 
 ```json
 {
   "format": "familytree",
-  "version": "1.0.0",
-  "id": "ce6a0e2e-32aa-4957-b658-9e952b0c6aa3",
+  "familytree_version": "0.0.1",
+  "uuid": "ce6a0e2e-32aa-4957-b658-9e952b0c6aa3",
   "not_duplicates": []
 }
 ```
@@ -106,22 +126,22 @@ Schema: `specs/familytree/familytree.schema.json`
 | Field           | Required | Description                                                      |
 |-----------------|----------|------------------------------------------------------------------|
 | `format`        | Yes      | Always `"familytree"` — identifies the format                    |
-| `version`       | Yes      | Semantic version of the spec this dataset conforms to            |
-| `id`            | Yes      | UUID v4 — the tree's stable identity                             |
+| `familytree_version` | Yes | FamilyTree spec version this dataset conforms to (e.g. `0.0.1`) |
+| `uuid`          | Yes      | UUID v4 — the tree's stable identity                             |
 | `not_duplicates`| No       | Pairs of persons confirmed distinct (see `ft not-duplicate`)     |
 
-The `id` is the authoritative identity of the tree regardless of the directory name. Tooling and forests reference trees by this UUID. If the file does not exist or `format` is not `"familytree"`, tooling should treat the directory as unrecognised and warn the user.
+The `uuid` in `.familytree.json` is the authoritative identity of the tree regardless of the directory name. Tooling and forests reference trees by this UUID. If the file does not exist or `format` is not `"familytree"`, tooling should treat the directory as unrecognised and warn the user.
 
 ### `persons-index.json`
 
 Schema: `specs/familytree/persons-index.schema.json`
 
-Located at `.familytree/persons-index.json`. A derived index of all persons, used by tooling for fast lookup, listing, and duplicate detection without reading every person file. Contains one entry per person with the fields most commonly needed for search and display.
+Located at `.familytree/persons-index.json` (tooling cache folder). A derived index of all persons, used by tooling for fast lookup, listing, and duplicate detection without reading every person file. Contains one entry per person with the fields most commonly needed for search and display.
 
 ```json
 [
   {
-    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "uuid": "550e8400-e29b-41d4-a716-446655440000",
     "name": { "given": "Jane", "surname": "Smith" },
     "sex": "F",
     "birth": { "date": "1932-07-04", "place": "Cork, Ireland" },
@@ -136,18 +156,18 @@ The index is regenerated automatically by tooling whenever a person file is crea
 
 Schema: `specs/familytree/relations-index.schema.json`
 
-Located at `.familytree/relations-index.json`. A derived index of all relations, used by tooling for fast traversal, listing, and integrity checking without reading every relation file. Contains one entry per relation with enough information to display the link and resolve both sides.
+Located at `.familytree/relations-index.json` (tooling cache folder). A derived index of all relations, used by tooling for fast traversal, listing, and integrity checking without reading every relation file. Contains one entry per relation with enough information to display the link and resolve both sides.
 
 ```json
 [
   {
-    "id": "b109de44-f1a2-b3e4-c5d6-e7f8a9b0c1d2",
+    "uuid": "b109de44-f1a2-b3e4-c5d6-e7f8a9b0c1d2",
     "type": "filiation",
     "parent": "9b4e11a2-c3d4-e5f6-a7b8-c9d0e1f2a3b4",
     "child": "550e8400-e29b-41d4-a716-446655440000"
   },
   {
-    "id": "c3d4e5f6-a7b8-c9d0-e1f2-a3b4c5d6e7f8",
+    "uuid": "c3d4e5f6-a7b8-c9d0-e1f2-a3b4c5d6e7f8",
     "type": "partner",
     "persons": [
       "9b4e11a2-c3d4-e5f6-a7b8-c9d0e1f2a3b4",
@@ -165,7 +185,8 @@ Schema: `specs/familytree/person.schema.json`
 
 ```json
 {
-  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "uuid": "550e8400-e29b-41d4-a716-446655440000",
+  "familytree_version": "0.0.1",
   "name": {
     "given": "Jane",
     "surname": "Smith"
@@ -185,7 +206,8 @@ Schema: `specs/familytree/relation.schema.json`
 
 ```json
 {
-  "id": "b109de44-f1a2-b3e4-c5d6-e7f8a9b0c1d2",
+  "uuid": "b109de44-f1a2-b3e4-c5d6-e7f8a9b0c1d2",
+  "familytree_version": "0.0.1",
   "type": "filiation",
   "parent": "9b4e11a2-c3d4-e5f6-a7b8-c9d0e1f2a3b4",
   "child":  "550e8400-e29b-41d4-a716-446655440000",
@@ -198,7 +220,8 @@ For `partner` relations, use `"persons"` instead of `"from"`/`"to"`:
 
 ```json
 {
-  "id": "c3d4e5f6-a7b8-c9d0-e1f2-a3b4c5d6e7f8",
+  "uuid": "c3d4e5f6-a7b8-c9d0-e1f2-a3b4c5d6e7f8",
+  "familytree_version": "0.0.1",
   "type": "partner",
   "persons": [
     "9b4e11a2-c3d4-e5f6-a7b8-c9d0e1f2a3b4",
@@ -215,11 +238,13 @@ For `partner` relations, use `"persons"` instead of `"from"`/`"to"`:
 
 | Field               | Type         | Required | Description                                        |
 |---------------------|--------------|----------|----------------------------------------------------|
-| `id`                | UUID v4      | Yes      | Unique identifier, matches filename                |
+| `uuid`              | UUID v4      | Yes      | Stable unique identifier                           |
+| `familytree_version`| string       | Yes      | Spec version this file was written against (e.g. `0.0.1`) |
 | `name`              | object       | Yes      | Primary name (see Name Fields)                     |
 | `names`             | object[]     | No       | Additional name variants (maiden, immigrant, etc.) |
-| `sex`               | `M` `F` `X` | No       | Biological sex                                     |
-| `title`             | string       | No       | Nobility or honorific title (Sir, Dame, Duke)      |
+| `sex`               | `M` `F` `X`  | No       | Biological sex                                      |
+| `gender`            | string       | No       | Gender identity when distinct from biological sex (free text) |
+| `title`             | string\|null | No       | Nobility or honorific title (Sir, Dame, Duke)       |
 | `restriction`       | string       | No       | `confidential`, `locked`, or `privacy`             |
 | `changed`           | string       | No       | ISO 8601 datetime of last change                   |
 
@@ -249,7 +274,7 @@ Applies to both `name` and each entry in `names[]`:
 | `death`        | object\|null | No       | Death event                         |
 | `burial`       | object\|null | No       | Burial event                        |
 
-`birth`, `death`, and `burial` each support: `date`, `place`, `coords`, `age`, `cause`, `agency`, `restriction`, `note`, `sources`.
+`birth`, `death`, and `burial` each support: `date`, `date_qualifier`, `date_to`, `place`, `coords`, `age`, `cause`, `agency`, `restriction`, `note`, `sources`.
 
 ### Personal Attributes & Facts
 
@@ -260,27 +285,49 @@ Applies to both `name` and each entry in `names[]`:
 | `religion`             | string   | Religion                                             |
 | `caste`                | string   | Caste name                                           |
 | `physical_description` | string   | Physical description                                 |
-| `national_id`          | object   | National ID: `{ "value": "…", "type": "passport" }`  |
-| `facts`                | object[] | Typed facts: `[{ "type": "…", "value": "…" }]`       |
+| `national_ids`         | object[] | Government-issued IDs: `[{ "value": "…", "type": "passport" }]` |
+| `facts`                | object[] | Typed facts: `[{ "type": "…", "value": "…" }]`                  |
 
-### Associations
+### Biography
 
-| Field          | Type     | Description                                                      |
-|----------------|----------|------------------------------------------------------------------|
-| `associations` | object[] | Non-family links to other persons (godfather, witness, employer) |
+| Field       | Type   | Description                                      |
+|-------------|--------|--------------------------------------------------|
+| `biography` | string | Free-text narrative biography of the person's life |
 
-Each association: `{ "person": uuid, "relation": "godfather", "note": "…", "sources": [] }`
+### DNA
+
+| Field          | Type     | Description                                                        |
+|----------------|----------|--------------------------------------------------------------------|
+| `dna`          | object[] | DNA test results                                                   |
+
+Each entry: `{ "provider": "AncestryDNA", "kit_number": "…", "haplogroup_y": "…", "haplogroup_mt": "…", "date": "…", "note": "…" }`. Only `provider` is required.
+
+### Living Status
+
+| Field    | Type    | Description                                                                          |
+|----------|---------|--------------------------------------------------------------------------------------|
+| `living` | boolean | Whether the person is believed to be still alive. Tooling may use this to apply privacy rules automatically. |
+
+### External References
+
+| Field          | Type     | Description                                                   |
+|----------------|----------|---------------------------------------------------------------|
+| `external_refs`| object[] | Links to external profiles or records                         |
+
+Each entry: `{ "url": "…", "label": "Find A Grave", "type": "findagrave", "note": "…" }`. `url` is required; `label`, `type`, and `note` are optional.
 
 ### Media & Notes
 
 | Field         | Type         | Description                              |
 |---------------|--------------|------------------------------------------|
-| `avatar_file` | string\|null | Path or URL to the person's avatar image |
-| `media_files` | string[]     | Paths relative to `media/` or URLs       |
+| `avatar_file` | string\|null | Relative path, absolute path, or URI for the person's avatar |
+| `media_files` | object[]     | Media file entries (see Media Files)                         |
 | `notes`       | string[]     | Free-text notes, one entry per note      |
 | `sources`     | object[]     | Sources (see Sources section)            |
 | `events`      | object[]     | Life events (see Events section)         |
 | `uncertain`   | string[]     | Dot-notation paths of uncertain fields   |
+| `created`     | string       | ISO 8601 datetime when the record was first created          |
+| `changed`     | string       | ISO 8601 datetime of last change                             |
 
 ### Uncertain Fields
 
@@ -300,30 +347,73 @@ using dot-notation paths:
 
 | Field         | Type     | Required | Description                                         |
 |---------------|----------|----------|-----------------------------------------------------|
-| `id`          | UUID v4  | Yes      | Unique identifier, matches filename                 |
-| `type`        | string   | Yes      | `partner` or `filiation`                            |
+| `uuid`               | UUID v4  | Yes      | Stable unique identifier                            |
+| `familytree_version` | string   | Yes      | Spec version this file was written against (e.g. `0.0.1`) |
+| `type`               | string   | Yes      | `partner`, `filiation`, or `association`            |
 | `events`      | object[] | No       | Events associated with this relation                |
 | `sources`     | object[] | No       | Sources supporting this relation                    |
-| `media_files` | string[] | No       | Paths relative to `media/` or URLs                  |
+| `media_files` | string[] | No       | Relative paths, absolute paths, or URIs for related media |
 | `notes`       | string[] | No       | Free-text notes                                     |
 | `uncertain`   | string[] | No       | Dot-notation paths of uncertain fields              |
 | `restriction` | string   | No       | `confidential`, `locked`, or `privacy`              |
+| `created`     | string   | No       | ISO 8601 datetime when this record was first created |
 | `changed`     | string   | No       | ISO 8601 datetime of last change                    |
 
 ### `partner` Fields
 
-| Field     | Type      | Required | Description                       |
-|-----------|-----------|----------|-----------------------------------|
-| `persons` | UUID v4[] | Yes      | Exactly two persons in the couple |
+| Field        | Type      | Required | Description                                                                 |
+|--------------|-----------|----------|-----------------------------------------------------------------------------|
+| `persons`    | UUID v4[] | Yes      | Exactly two persons in the couple                                           |
+| `kind`       | string    | No       | `marriage`, `civil_union`, `cohabitation`, `engagement`, or `custom`        |
+| `kind_label` | string    | No       | Human label when `kind` is `custom`                                         |
+| `end_date`   | string\|null | No    | Date the partnership ended. `null` = ongoing.                               |
 
 ### `filiation` Fields
 
+| Field      | Type    | Required | Description                                                                              |
+|------------|---------|----------|------------------------------------------------------------------------------------------|
+| `parent`   | UUID v4 | Yes      | The parent person                                                                        |
+| `child`    | UUID v4 | Yes      | The child person                                                                         |
+| `pedigree`  | string  | No       | `birth`, `adopted`, `foster`, `sealing`, `donor`, `surrogate`, `guardian`, `registered`, or `step` |
+| `legal`     | boolean | No       | Whether this parent is legally recognised (e.g. on birth certificate)                      |
+| `end_date`  | string\|null | No  | Date the relationship ended. `null` = ongoing.                               |
+| `status`    | string  | No       | `challenged`, `disproven`, or `proven`                                                      |
+
+`pedigree` and `legal` are independent. Use `registered` for a legally registered parent with no biological or adoptive connection (e.g. a husband recorded on a birth certificate who is not the biological father). A donor can be `legal: false`. Presence of `end_date` indicates the relationship was temporary or dissolved.
+
+### `association` Fields
+
 | Field      | Type    | Required | Description                                                      |
 |------------|---------|----------|------------------------------------------------------------------|
-| `parent`   | UUID v4 | Yes      | The parent person                                                |
-| `child`    | UUID v4 | Yes      | The child person                                                 |
-| `pedigree` | string  | No       | `birth`, `adopted`, `foster`, or `sealing` (default: `birth`)   |
-| `status`   | string  | No       | `challenged`, `disproven`, or `proven`                           |
+| `from`     | UUID v4 | Yes      | The person the relation originates from                          |
+| `to`       | UUID v4 | Yes      | The person the relation points to                                |
+| `relation` | string  | Yes      | Nature of the link (e.g. `godfather`, `witness`, `employer`). Use `filiation` with `pedigree: "guardian"` for guardianship — not `association`. |
+
+## Date Qualifiers
+
+`date_qualifier` can be set on any `date` field in life events, person events, and relation events. When `date_qualifier` is `BET`, set `date_to` to the end of the range.
+
+| Value | Meaning          |
+|-------|------------------|
+| `ABT` | About / approximately |
+| `BEF` | Before           |
+| `AFT` | After            |
+| `BET` | Between (use `date_to` for end of range) |
+| `CAL` | Calculated       |
+| `EST` | Estimated        |
+
+## Media Files
+
+`media_files` on persons and relations is an array of media file objects. Each entry:
+
+| Field     | Type    | Required | Description                                                        |
+|-----------|---------|----------|--------------------------------------------------------------------|
+| `file`    | string  | Yes      | Relative path (from the record's folder), absolute path, or URI   |
+| `title`   | string  | No       | Human-readable title or caption                                    |
+| `type`    | string  | No       | `photo`, `document`, `certificate`, `audio`, `video`, or `other`  |
+| `date`    | string  | No       | Date the media was created (e.g. when a photo was taken)           |
+| `primary` | boolean | No       | Whether this is the primary image for the record                   |
+| `note`    | string  | No       | Free-text note                                                     |
 
 ## Events
 
@@ -333,10 +423,12 @@ Beyond `birth`, `death`, and `burial`, a person may have additional life events 
 
 | Field          | Required | Applies to | Description                                          |
 |----------------|----------|------------|------------------------------------------------------|
-| `type`         | Yes      | all        | Event type (see below)                               |
-| `type_label`   | No       | all        | Human label when `type` is `custom`                  |
-| `date`         | No       | all        | Date of the event (see Date Format)                  |
-| `place`        | No       | all        | Place of the event (see Place Format)                |
+| `type`           | Yes      | all        | Event type (see below)                                             |
+| `type_label`     | No       | all        | Human label when `type` is `custom`                               |
+| `date`           | No       | all        | Date of the event (see Date Format)                               |
+| `date_qualifier` | No       | all        | `ABT`, `BEF`, `AFT`, `BET`, `CAL`, or `EST` (see Date Qualifiers) |
+| `date_to`        | No       | all        | End date when `date_qualifier` is `BET`                           |
+| `place`          | No       | all        | Place of the event (see Place Format)                             |
 | `coords`       | No       | all        | `{ "lat": …, "lng": … }`                             |
 | `age`          | No       | person     | Age of the person at time of event                   |
 | `age_partner_a`| No       | partner    | Age of first partner at event                        |
@@ -446,13 +538,13 @@ Each source is an inline object describing where the data came from.
 
 ```json
 {
-  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "uuid": "550e8400-e29b-41d4-a716-446655440000",
   "name": { "given": "Jane", "surname": "Smith" },
   "sources": [
     {
       "title": "Birth certificate – County Cork, 1932",
       "type": "civil-record",
-      "file": "media/birth-cert-jane-smith-1932.jpg",
+      "file": "persons/jane-smith/media/birth-cert-jane-smith-1932.jpg",
       "date": "2025-11-04",
       "recorded_date": "1932-03-12",
       "page": "Vol. 4, folio 37",
@@ -503,7 +595,7 @@ This format is designed to round-trip with GEDCOM 5.5.1. The mapping is:
 |---------------------|-----------------------------------------|
 | `INDI`              | `person` file                           |
 | `FAM`               | set of `relation` files                 |
-| `@I0001@`           | `id` (UUID v4)                          |
+| `@I0001@`           | `uuid`                                  |
 | `NAME Given /Sur/`  | `name.given` + `name.surname`           |
 | `SEX M`             | `sex: "M"`                              |
 | `BIRT DATE PLACE`   | `birth.date` + `birth.place`            |
@@ -621,7 +713,7 @@ The FamilyTree format is designed to be usable with any text editor and Git dire
 
 Validates all person and relation JSON files against their schemas. Checks that:
 - Each file is valid JSON conforming to `person.schema.json` or `relation.schema.json`
-- The `id` field matches the filename (without `.json`)
+- The `uuid` field is a valid UUID v4
 - All UUID references in relation files resolve to existing person files
 - Dates follow the allowed format patterns
 - Dot-notation paths in `uncertain` reference fields that exist in the record
@@ -630,7 +722,7 @@ Exits with a non-zero status if any file fails validation, making it suitable fo
 
 #### `ft add-person`
 
-Interactive prompt to create a new person file. Generates a UUID v4, writes a new JSON file to `persons/<uuid>.json`, and opens it in the default editor. All fields are optional except `id` and `name`.
+Interactive prompt to create a new person file. Generates a UUID v4, writes a new JSON file to `persons/<uuid>.json`, and opens it in the default editor. All fields are optional except `uuid` and `name`.
 
 #### `ft add-relation <type>`
 
@@ -723,13 +815,13 @@ The operation is staged as a Git working-tree change and not committed automatic
 
 #### `ft not-duplicate <uuid-a> <uuid-b>`
 
-Marks two persons as confirmed distinct, suppressing them from future `ft find-duplicates` output. The pair is appended to `.familytree/familytree.json`. An optional `--note` flag records the reason.
+Marks two persons as confirmed distinct, suppressing them from future `ft find-duplicates` output. The pair is appended to `.familytree.json`. An optional `--note` flag records the reason.
 
 ```
 ft not-duplicate 550e8400 a1b2c3d4 --note "Same name, different generation"
 ```
 
-The pair is appended to the `not_duplicates` array in `.familytree/familytree.json`. Pairs are unordered — checked regardless of which UUID appears first. The entry is created automatically if it does not exist.
+The pair is appended to the `not_duplicates` array in `.familytree.json`. Pairs are unordered — checked regardless of which UUID appears first. The entry is created automatically if it does not exist.
 
 ## Tree Import
 
@@ -766,7 +858,7 @@ Detected by `ft find-duplicates` after the import completes. The user then resol
 
 ### `ft import-tree <path>`
 
-Imports a `.familytree/` directory from `<path>` into the current tree, handling all four cases above:
+Imports a FamilyTree directory from `<path>` into the current tree, handling all four cases above:
 
 1. Scans all person and relation files in the source
 2. For each file: computes SHA-256 of source and target content, then skips (case 2), copies (case 1), or queues for conflict resolution (case 3)

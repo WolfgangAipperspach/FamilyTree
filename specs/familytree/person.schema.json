@@ -2,9 +2,10 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "person.schema.json",
   "type": "object",
-  "required": ["id", "name"],
+  "required": ["uuid", "familytree_version", "name"],
   "properties": {
-    "id":  { "type": "string", "format": "uuid" },
+    "uuid":               { "type": "string", "format": "uuid" },
+    "familytree_version": { "type": "string", "description": "FamilyTree spec version this file was written against (semver, e.g. '0.0.1')" },
 
     "name": { "$ref": "#/$defs/nameObject" },
     "names": {
@@ -13,8 +14,9 @@
       "items": { "$ref": "#/$defs/nameObject" }
     },
 
-    "sex":   { "type": "string", "enum": ["M", "F", "X"] },
-    "title": { "type": "string", "description": "Nobility or honorific title (e.g. Sir, Dame, Duke)" },
+    "sex":    { "type": "string", "enum": ["M", "F", "X"] },
+    "gender": { "type": "string", "description": "Gender identity, when distinct from biological sex. Free text (e.g. 'male', 'female', 'non-binary', 'transgender woman')." },
+    "title":  { "type": ["string", "null"], "description": "Nobility or honorific title (e.g. Sir, Dame, Duke)" },
 
     "birth":  { "$ref": "#/$defs/lifeEvent" },
     "death":  { "$ref": "#/$defs/lifeEvent" },
@@ -25,14 +27,18 @@
     "religion":             { "type": "string" },
     "caste":                { "type": "string" },
     "physical_description": { "type": "string" },
-    "national_id": {
-      "type": "object",
-      "required": ["value"],
-      "properties": {
-        "value": { "type": "string" },
-        "type":  { "type": "string", "description": "e.g. passport, ssn, nino" }
-      },
-      "additionalProperties": false
+    "national_ids": {
+      "description": "National or government-issued identifiers (passport, SSN, NHS number, etc.)",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["value"],
+        "properties": {
+          "value": { "type": "string" },
+          "type":  { "type": "string", "description": "e.g. passport, ssn, nino, bsn" }
+        },
+        "additionalProperties": false
+      }
     },
     "facts": {
       "description": "Typed personal facts or characteristics (GEDCOM FACT/EVEN with TYPE)",
@@ -48,31 +54,59 @@
         "additionalProperties": false
       }
     },
-    "associations": {
-      "description": "Non-family links to other persons (GEDCOM ASSO)",
+    "biography": { "type": "string", "description": "Free-text biographical narrative about the person's life." },
+
+    "dna": {
+      "description": "DNA test results and genetic data",
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["person", "relation"],
+        "required": ["provider"],
         "properties": {
-          "person":   { "type": "string", "format": "uuid" },
-          "relation": { "type": "string", "description": "e.g. godfather, witness, employer" },
-          "note":     { "type": "string" },
-          "sources":  { "$ref": "#/$defs/sources" }
+          "provider":     { "type": "string", "description": "Test provider, e.g. 'AncestryDNA', '23andMe', 'FamilyTreeDNA'" },
+          "kit_number":   { "type": "string", "description": "Kit or sample number" },
+          "haplogroup_y": { "type": "string", "description": "Y-chromosome haplogroup (paternal line)" },
+          "haplogroup_mt":{ "type": "string", "description": "Mitochondrial haplogroup (maternal line)" },
+          "date":         { "type": "string", "description": "Date the test was taken or results received" },
+          "note":         { "type": "string" }
         },
         "additionalProperties": false
       }
     },
 
-    "avatar_file": { "type": ["string", "null"] },
-    "media_files": { "type": "array", "items": { "type": "string" } },
+    "living": { "type": "boolean", "description": "Whether the person is believed to be still alive. Tooling may use this to apply privacy rules automatically." },
+
+    "external_refs": {
+      "description": "Links to external profiles or records (Find A Grave, WikiTree, Ancestry, etc.)",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["url"],
+        "properties": {
+          "url":   { "type": "string", "description": "URL to the external profile or record" },
+          "label": { "type": "string", "description": "Human-readable label, e.g. 'Find A Grave', 'WikiTree'" },
+          "type":  { "type": "string", "description": "Machine-readable type, e.g. 'findagrave', 'wikitree', 'ancestry', 'familysearch'" },
+          "note":  { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+
+    "avatar_file": { "type": ["string", "null"], "description": "Relative path (from the person's folder), absolute path, or URI to the person's avatar image. Null if not set." },
+    "media_files": {
+      "description": "Media files related to this person.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/mediaFile" }
+    },
     "notes":       { "type": "array", "items": { "type": "string" } },
     "sources":     { "$ref": "#/$defs/sources" },
     "events":      { "$ref": "#/$defs/events" },
     "uncertain":   { "type": "array", "items": { "type": "string" } },
     "restriction": { "type": "string", "enum": ["confidential", "locked", "privacy"] },
+    "created":     { "type": "string", "description": "ISO 8601 datetime when this record was first created" },
     "changed":     { "type": "string", "description": "ISO 8601 datetime of last change" }
   },
+  "additionalProperties": false,
 
   "$defs": {
     "nameObject": {
@@ -132,9 +166,11 @@
             "custom"
           ]
         },
-        "type_label": { "type": "string", "description": "Human label when type is 'custom'" },
-        "date":        { "type": "string" },
-        "place":       { "type": "string" },
+        "type_label":       { "type": "string", "description": "Human label when type is 'custom'" },
+        "date":             { "type": "string" },
+        "date_qualifier":   { "$ref": "#/$defs/dateQualifier" },
+        "date_to":          { "type": "string", "description": "End date for BET (between) qualifier" },
+        "place":            { "type": "string" },
         "coords":      { "$ref": "#/$defs/coords" },
         "age":         { "type": "string", "description": "Age of the person at the time of the event" },
         "cause":       { "type": "string", "description": "Cause of the event (e.g. cause of death)" },
@@ -155,8 +191,10 @@
     "lifeEvent": {
       "type": ["object", "null"],
       "properties": {
-        "date":        { "type": "string" },
-        "place":       { "type": "string" },
+        "date":           { "type": "string" },
+        "date_qualifier": { "$ref": "#/$defs/dateQualifier" },
+        "date_to":        { "type": "string", "description": "End date for BET (between) qualifier" },
+        "place":          { "type": "string" },
         "coords":      { "$ref": "#/$defs/coords" },
         "age":         { "type": "string" },
         "cause":       { "type": "string", "description": "Cause (most relevant for death)" },
@@ -164,6 +202,26 @@
         "restriction": { "type": "string", "enum": ["confidential", "locked", "privacy"] },
         "note":        { "type": "string" },
         "sources":     { "$ref": "#/$defs/sources" }
+      },
+      "additionalProperties": false
+    },
+
+    "dateQualifier": {
+      "type": "string",
+      "enum": ["ABT", "BEF", "AFT", "BET", "CAL", "EST"],
+      "description": "Date qualifier: ABT=about, BEF=before, AFT=after, BET=between (use date_to for end), CAL=calculated, EST=estimated"
+    },
+
+    "mediaFile": {
+      "type": "object",
+      "required": ["file"],
+      "properties": {
+        "file":    { "type": "string", "description": "Relative path (from the record's folder), absolute path, or URI" },
+        "title":   { "type": "string", "description": "Human-readable title or caption" },
+        "type":    { "type": "string", "enum": ["photo", "document", "certificate", "audio", "video", "other"], "description": "Type of media" },
+        "date":    { "type": "string", "description": "Date of the media (e.g. when a photo was taken)" },
+        "primary": { "type": "boolean", "description": "Whether this is the primary image for the record" },
+        "note":    { "type": "string" }
       },
       "additionalProperties": false
     },

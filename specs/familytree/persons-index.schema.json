@@ -6,12 +6,12 @@
   "type": "array",
   "items": {
     "type": "object",
-    "required": ["id"],
+    "required": ["uuid"],
     "properties": {
-      "id": {
+      "uuid": {
         "type": "string",
         "format": "uuid",
-        "description": "UUID v4 — matches the person filename"
+        "description": "UUID v4 — stable identity of the person"
       },
       "name": {
         "type": "object",

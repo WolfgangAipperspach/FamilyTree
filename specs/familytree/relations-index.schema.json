@@ -6,13 +6,13 @@
   "type": "array",
   "items": {
     "type": "object",
-    "required": ["id", "type"],
+    "required": ["uuid", "type"],
     "oneOf": [
       {
         "title": "filiation",
-        "required": ["id", "type", "parent", "child"],
+        "required": ["uuid", "type", "parent", "child"],
         "properties": {
-          "id":     { "type": "string", "format": "uuid" },
+          "uuid":   { "type": "string", "format": "uuid" },
           "type":   { "type": "string", "const": "filiation" },
           "parent": { "type": "string", "format": "uuid" },
           "child":  { "type": "string", "format": "uuid" }
@@ -21,9 +21,9 @@
       },
       {
         "title": "partner",
-        "required": ["id", "type", "persons"],
+        "required": ["uuid", "type", "persons"],
         "properties": {
-          "id":      { "type": "string", "format": "uuid" },
+          "uuid":    { "type": "string", "format": "uuid" },
           "type":    { "type": "string", "const": "partner" },
           "persons": {
             "type": "array",
@@ -31,6 +31,18 @@
             "minItems": 2,
             "maxItems": 2
           }
+        },
+        "additionalProperties": false
+      },
+      {
+        "title": "association",
+        "required": ["uuid", "type", "from", "to", "relation"],
+        "properties": {
+          "uuid":     { "type": "string", "format": "uuid" },
+          "type":     { "type": "string", "const": "association" },
+          "from":     { "type": "string", "format": "uuid" },
+          "to":       { "type": "string", "format": "uuid" },
+          "relation": { "type": "string" }
         },
         "additionalProperties": false
       }
