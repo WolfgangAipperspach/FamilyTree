@@ -35,6 +35,8 @@ header h1 { font-size: 0.95em; color: #fbbf24; white-space: nowrap; }
   padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em;
 }
 .btn-sm:hover { background: #4b5563; }
+.btn-sm.filter-on { background: #92400e; color: #fde68a; border-color: #f59e0b; }
+.btn-sm.filter-on:hover { background: #b45309; }
 .ctrl-sep { color: #374151; }
 
 /* ── Main layout ───────────────────────────────────────────────────────── */
@@ -217,6 +219,46 @@ header h1 { font-size: 0.95em; color: #fbbf24; white-space: nowrap; }
 #listTable .cell-id { color: #4b5563; font-size: 0.88em; }
 #listTable .cell-surn { font-weight: bold; color: #f3f4f6; }
 
+/* ── Tree add pill & modal ─────────────────────────────────────────────────── */
+#treeAddPill {
+  position: absolute; z-index: 20; pointer-events: auto;
+  padding: 7px 16px; border-radius: 6px; font-size: 0.82em; font-weight: bold;
+  cursor: pointer; display: none; white-space: nowrap;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.55); border: none; font-family: inherit;
+  align-items: center; justify-content: center;
+}
+#treeAddPill.mode-parent  { background: #34d399; color: #064e3b; }
+#treeAddPill.mode-child   { background: #60a5fa; color: #1e3a5f; }
+#treeAddPill.mode-partner { background: #d97706; color: #451a03; height: 54px; padding: 7px 13px; }
+#treeAddPill.mode-sibling { background: #8b5cf6; color: #2e1065; height: 54px; padding: 7px 13px; }
+#treeAddModal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 50; display: flex; align-items: center; justify-content: center; }
+#treeAddModal.hidden { display: none; }
+#treeAddBox { background: #1f2937; border: 1px solid #374151; border-radius: 10px; padding: 16px; width: 320px; }
+#treeAddBox h3 { font-size: 0.85em; color: #fbbf24; margin-bottom: 10px; }
+#treeAddBox input { width: 100%; background: #111827; border: 1px solid #374151; color: #e5e7eb; border-radius: 5px; padding: 6px 10px; font-size: 0.82em; font-family: inherit; margin-bottom: 6px; }
+#treeAddBox input:focus { outline: none; border-color: #fbbf24; }
+#treeAddResults { max-height: 160px; overflow-y: auto; margin-bottom: 6px; }
+.tree-add-or { text-align: center; color: #4b5563; font-size: 0.75em; margin: 4px 0 8px; }
+#treeAddNewBtn { width: 100%; padding: 7px; background: #065f46; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 0.8em; font-family: inherit; margin-bottom: 4px; }
+#treeAddNewBtn:hover { background: #047857; }
+
+/* ── Relationship edit pill & modal ───────────────────────────────────────── */
+#relEditPill {
+  position: absolute; z-index: 20; pointer-events: auto;
+  padding: 4px 10px; border-radius: 5px; font-size: 0.76em; font-weight: bold;
+  cursor: pointer; display: none; white-space: nowrap;
+  background: #1f2937; color: #d1d5db; border: 1px solid #4b5563;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.6);
+}
+#relEditModal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 50; display: flex; align-items: center; justify-content: center; }
+#relEditModal.hidden { display: none; }
+#relEditBox { background: #1f2937; border: 1px solid #374151; border-radius: 10px; padding: 16px; width: 280px; }
+#relEditBox h3 { font-size: 0.85em; color: #fbbf24; margin-bottom: 6px; }
+#relEditBox p  { font-size: 0.78em; color: #9ca3af; margin-bottom: 10px; }
+.rel-remove-btn { display: block; width: 100%; margin-bottom: 6px; background: #7f1d1d; color: #fca5a5; border: none; border-radius: 6px; padding: 7px 12px; font-size: 0.81em; font-weight: bold; cursor: pointer; font-family: inherit; text-align: left; }
+.rel-remove-btn:hover { background: #991b1b; }
+#relEditCancelBtn { display: block; width: 100%; background: #374151; color: #9ca3af; border: none; border-radius: 6px; padding: 7px 12px; font-size: 0.81em; cursor: pointer; font-family: inherit; margin-top: 2px; }
+
 /* ── View Toggle ───────────────────────────────────────────────────────────── */
 .view-toggle { display: flex; gap: 2px; background: #111827; border-radius: 5px; padding: 2px; }
 .view-btn { background: transparent; border: none; color: #6b7280; padding: 3px 10px; border-radius: 4px; cursor: pointer; font-size: 0.78em; }
@@ -249,6 +291,7 @@ header h1 { font-size: 0.95em; color: #fbbf24; white-space: nowrap; }
   <div class="ctrl network-ctrl"><span data-i18n="force">Force</span>: <input type="range" id="slForce" min="-400" max="-20" value="-180"></div>
   <div class="ctrl network-ctrl"><span data-i18n="link">Link</span>: <input type="range" id="slLink" min="30" max="200" value="80"></div>
   <div class="ctrl network-ctrl"><label><input type="checkbox" id="chkNames" checked> <span data-i18n="names">Names</span></label></div>
+  <div class="ctrl network-ctrl"><label><input type="checkbox" id="chkGen" checked> <span>Gen</span></label></div>
   <div id="headerSearchWrap" class="ctrl">
     <input type="text" id="searchInput" data-i18n-placeholder="searchPerson" placeholder="Search person…" autocomplete="off">
     <div id="searchDropdown"></div>
@@ -262,6 +305,7 @@ header h1 { font-size: 0.95em; color: #fbbf24; white-space: nowrap; }
     <button class="view-btn" id="btnViewList">&#9776; List</button>
   </div>
   <span class="ctrl-sep">|</span>
+  <button class="btn-sm" id="btnOneParent">⚠ 1 parent</button>
   <select id="langSel" class="btn-sm" title="Language / Sprache / Idioma" style="padding:3px 6px">
     <option value="en" selected>EN</option>
     <option value="de">DE</option>
@@ -370,6 +414,34 @@ header h1 { font-size: 0.95em; color: #fbbf24; white-space: nowrap; }
         </tr></thead>
         <tbody id="listBody"></tbody>
       </table>
+    </div>
+
+    <!-- Tree add pill -->
+    <button id="treeAddPill"></button>
+
+    <!-- Tree add-person modal -->
+    <div id="treeAddModal" class="hidden">
+      <div id="treeAddBox">
+        <h3 id="treeAddTitle">Add parent</h3>
+        <input type="text" id="treeAddSearch" placeholder="Search existing person…" autocomplete="off">
+        <div id="treeAddResults"></div>
+        <div class="tree-add-or">— or —</div>
+        <button id="treeAddNewBtn">+ Create new person</button>
+        <button class="cancel-btn" id="treeAddCancelBtn">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Relationship edit pill -->
+    <button id="relEditPill">✎ edit</button>
+
+    <!-- Relationship edit modal -->
+    <div id="relEditModal" class="hidden">
+      <div id="relEditBox">
+        <h3 id="relEditTitle"></h3>
+        <p  id="relEditDesc"></p>
+        <div id="relEditBtns"></div>
+        <button id="relEditCancelBtn">Cancel</button>
+      </div>
     </div>
 
     <!-- Search overlay shown before any selection -->
@@ -769,6 +841,31 @@ function parseGED(text) {
 }
 
 // ══════════════════════════════════════════════════════════════════
+// FILTER: ONE PARENT
+// ══════════════════════════════════════════════════════════════════
+let filterOneParent = false;
+
+function countParents(personId) {
+  const p = persons[personId];
+  if (!p) return 0;
+  let count = 0;
+  const seen = new Set();
+  for (const famId of p.famc) {
+    const fam = families[famId];
+    if (!fam) continue;
+    if (fam.husb && !seen.has(fam.husb)) { seen.add(fam.husb); count++; }
+    if (fam.wife && !seen.has(fam.wife)) { seen.add(fam.wife); count++; }
+  }
+  return count;
+}
+
+document.getElementById('btnOneParent').addEventListener('click', () => {
+  filterOneParent = !filterOneParent;
+  document.getElementById('btnOneParent').classList.toggle('filter-on', filterOneParent);
+  rerender();
+});
+
+// ══════════════════════════════════════════════════════════════════
 // GRAPH HELPERS
 // ══════════════════════════════════════════════════════════════════
 function personName(p) {
@@ -833,6 +930,50 @@ function getNeighbors(personId, hops) {
 }
 
 // ══════════════════════════════════════════════════════════════════
+// GENERATION HELPERS
+// ══════════════════════════════════════════════════════════════════
+function computeGenerations(nodeIds, rootId) {
+  const gen = new Map([[rootId, 0]]);
+  const queue = [rootId];
+  while (queue.length) {
+    const id = queue.shift();
+    const g  = gen.get(id);
+    const p  = persons[id];
+    // Spouses → same generation
+    for (const famId of p.fams) {
+      const fam = families[famId];
+      if (!fam) continue;
+      const spId = fam.husb === id ? fam.wife : fam.husb;
+      if (spId && nodeIds.has(spId) && !gen.has(spId)) { gen.set(spId, g);     queue.push(spId); }
+      for (const cId of fam.chil)
+        if (nodeIds.has(cId) && !gen.has(cId))          { gen.set(cId, g + 1); queue.push(cId);  }
+    }
+    // Parents → one generation up
+    for (const famId of p.famc) {
+      const fam = families[famId];
+      if (!fam) continue;
+      for (const pId of [fam.husb, fam.wife].filter(Boolean))
+        if (nodeIds.has(pId) && !gen.has(pId))           { gen.set(pId, g - 1); queue.push(pId);  }
+    }
+  }
+  return gen;
+}
+
+function makeGenForce(genMap, spacing) {
+  let nodes = [];
+  function force(alpha) {
+    const cy = H / 2;
+    for (const n of nodes) {
+      const g = genMap.get(n.id);
+      if (g === undefined) continue;
+      n.vy += (cy + g * spacing - n.y) * 0.25 * alpha;
+    }
+  }
+  force.initialize = ns => { nodes = ns; };
+  return force;
+}
+
+// ══════════════════════════════════════════════════════════════════
 // D3 NETWORK
 // ══════════════════════════════════════════════════════════════════
 const colFill   = { M:'#3b82f6', F:'#ec4899', U:'#6b7280' };
@@ -883,12 +1024,31 @@ function renderSubgraph(personId, hops) {
   gRoot.selectAll('*').remove();
 
   // Links
-  linkSel = gRoot.append('g').selectAll('line').data(links).join('line')
+  const linkG2 = gRoot.append('g');
+  linkSel = linkG2.selectAll('line').data(links).join('line')
     .attr('stroke', d => d.type === 'marriage' ? '#d97706' : d.type === 'sibling' ? '#a78bfa' : '#34d399')
     .attr('stroke-width', d => d.type === 'marriage' ? 2 : d.type === 'sibling' ? 1 : 1.4)
     .attr('stroke-dasharray', d => d.type === 'parent' ? '5,3' : d.type === 'sibling' ? '2,4' : null)
     .attr('marker-end', d => d.type === 'parent' ? 'url(#arr)' : null)
     .attr('opacity', 0.65);
+  // Wider transparent hit area for link hover
+  linkG2.selectAll('line.hit').data(links).join('line')
+    .attr('class', 'hit').attr('stroke', 'transparent').attr('stroke-width', 12)
+    .style('cursor', 'pointer')
+    .on('mouseover', function(event, d) {
+      const src = d.source, tgt = d.target;
+      const mx = (src.x + tgt.x) / 2, my = (src.y + tgt.y) / 2;
+      const ctm = gRoot.node().getScreenCTM();
+      const pageX = ctm.a * mx + ctm.c * my + ctm.e;
+      const pageY = ctm.b * mx + ctm.d * my + ctm.f;
+      showRelPill(pageX, pageY, {
+        type: d.type, famId: d.famId,
+        personA: src.id || src, personB: tgt.id || tgt,
+        childId: d.type === 'parent' ? (tgt.id || tgt) : null,
+        children: d.type === 'sibling' ? (families[d.famId] ? families[d.famId].chil : []) : null,
+      });
+    })
+    .on('mouseout', hideRelPill);
 
   // Nodes
   nodeGroup = gRoot.append('g').selectAll('g.node').data(nodes).join('g')
@@ -904,6 +1064,13 @@ function renderSubgraph(personId, hops) {
   nodeGroup.filter(d => d.id === selectedId)
     .append('circle').attr('r', 14)
     .attr('fill','none').attr('stroke','#fbbf24').attr('stroke-width',2).attr('opacity',0.5);
+
+  // One-parent indicator (orange dot, top-right)
+  if (filterOneParent) {
+    nodeGroup.filter(d => countParents(d.id) === 1)
+      .append('circle').attr('r', 3.5).attr('cx', 8).attr('cy', -8)
+      .attr('fill', '#f59e0b').attr('pointer-events', 'none');
+  }
 
   // Dead marker (small cross)
   nodeGroup.filter(d => d.deat).append('text')
@@ -951,8 +1118,20 @@ function renderSubgraph(personId, hops) {
       ].join('');
       tip.style.display = 'block';
     })
-    .on('mousemove', e => { tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-10)+'px'; })
-    .on('mouseout',  () => { tip.style.display='none'; });
+    .on('mousemove', (e, d) => {
+      tip.style.left = (e.clientX + 14) + 'px'; tip.style.top = (e.clientY - 10) + 'px';
+      const circ = e.currentTarget.querySelector('circle');
+      const rect = (circ || e.currentTarget).getBoundingClientRect();
+      const ncx  = (rect.left + rect.right)  / 2;
+      const ncy  = (rect.top  + rect.bottom) / 2;
+      const ang  = Math.atan2(e.clientY - ncy, e.clientX - ncx) * 180 / Math.PI;
+      const mode = ang > -135 && ang < -45 ? 'parent'
+                 : ang >=  -45 && ang <  45 ? 'sibling'
+                 : ang >=   45 && ang < 135 ? 'child'
+                 : 'partner';
+      showTreePill(rect, mode, d.id);
+    })
+    .on('mouseout',  () => { tip.style.display = 'none'; hideTreePill(); });
 
   // Simulation
   simulation.nodes(nodes);
@@ -960,10 +1139,21 @@ function renderSubgraph(personId, hops) {
     .distance(+document.getElementById('slLink').value));
   simulation.force('charge').strength(+document.getElementById('slForce').value);
   simulation.force('center', d3.forceCenter(W/2, H/2));
+  if (document.getElementById('chkGen').checked) {
+    const nodeIds = new Set(nodes.map(n => n.id));
+    const spacing = Math.max(80, +document.getElementById('slLink').value * 1.8);
+    simulation.force('generation', makeGenForce(computeGenerations(nodeIds, personId), spacing));
+  } else {
+    simulation.force('generation', null);
+  }
   simulation.alpha(1).restart();
 
+  const hitSel = linkG2.selectAll('line.hit');
   simulation.on('tick', () => {
     linkSel
+      .attr('x1',d=>d.source.x).attr('y1',d=>d.source.y)
+      .attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+    hitSel
       .attr('x1',d=>d.source.x).attr('y1',d=>d.source.y)
       .attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
     nodeGroup.attr('transform', d=>`translate(${d.x},${d.y})`);
@@ -1240,8 +1430,10 @@ function addParent(childId, parentId) {
   if (!famId) {
     famId = newFamId();
     persons[childId].famc.push(famId);
+    families[famId].chil.push(childId);
   }
   const fam = families[famId];
+  if (!fam.chil.includes(childId)) fam.chil.push(childId);
   const pp = persons[parentId];
   if (!fam.husb && pp.sex !== 'F') { fam.husb = parentId; }
   else if (!fam.wife && pp.sex === 'F') { fam.wife = parentId; }
@@ -1259,6 +1451,21 @@ function removeParentLink(famId, childId) {
   persons[childId].famc = persons[childId].famc.filter(f => f !== famId);
   cleanFam(famId);
   renderLinks(childId);
+  rerender();
+}
+
+function addSibling(personId, siblingId) {
+  // Prefer an existing parent family; otherwise create one with no parents
+  let famId = persons[personId].famc[0] || null;
+  if (!famId) {
+    famId = newFamId();
+    persons[personId].famc.push(famId);
+    families[famId].chil.push(personId);
+  }
+  const fam = families[famId];
+  if (!fam.chil.includes(siblingId)) fam.chil.push(siblingId);
+  if (!persons[siblingId].famc.includes(famId)) persons[siblingId].famc.push(famId);
+  renderLinks(selectedId);
   rerender();
 }
 
@@ -1807,30 +2014,62 @@ function renderTreeView(personId) {
   const linkG = gRoot.append('g');
   const nodeG = gRoot.append('g');
 
-  function drawLink(sx, sy, tx, ty, color) {
+  function svgToPage(mx, my) {
+    const ctm = gRoot.node().getScreenCTM();
+    return { x: ctm.a * mx + ctm.c * my + ctm.e, y: ctm.b * mx + ctm.d * my + ctm.f };
+  }
+
+  function drawLink(sx, sy, tx, ty, color, relInfo) {
     const my = (sy + ty) / 2;
+    const d = `M${sx},${sy} C${sx},${my} ${tx},${my} ${tx},${ty}`;
     linkG.append('path')
-      .attr('d', `M${sx},${sy} C${sx},${my} ${tx},${my} ${tx},${ty}`)
-      .attr('stroke', color).attr('stroke-width', 1.5)
+      .attr('d', d).attr('stroke', color).attr('stroke-width', 1.5)
       .attr('fill', 'none').attr('opacity', 0.7);
+    if (relInfo) {
+      linkG.append('path')
+        .attr('d', d).attr('stroke', 'transparent').attr('stroke-width', 12)
+        .attr('fill', 'none').style('cursor', 'pointer')
+        .on('mouseover', function() {
+          const mid = svgToPage((sx + tx) / 2, (sy + ty) / 2);
+          showRelPill(mid.x, mid.y, relInfo);
+        })
+        .on('mouseout', hideRelPill);
+    }
+  }
+
+  function findParentFam(childId, parentId) {
+    return persons[childId]?.famc.find(fid => {
+      const f = families[fid];
+      return f && (f.husb === parentId || f.wife === parentId);
+    });
   }
 
   // Ancestors go upward (negate y)
   if (ancHier) {
-    for (const lk of ancHier.links())
-      drawLink(cx + lk.source.x, cy - lk.source.y, cx + lk.target.x, cy - lk.target.y, '#4b5563');
+    for (const lk of ancHier.links()) {
+      const childId = lk.source.data.id, parentId = lk.target.data.id;
+      const famId = findParentFam(childId, parentId);
+      drawLink(cx + lk.source.x, cy - lk.source.y, cx + lk.target.x, cy - lk.target.y, '#4b5563',
+        famId ? { type: 'parent', famId, personA: parentId, personB: childId, childId } : null);
+    }
   }
   // Descendants go downward
   if (descHier) {
-    for (const lk of descHier.links())
-      drawLink(cx + lk.source.x, cy + lk.source.y, cx + lk.target.x, cy + lk.target.y, '#374151');
+    for (const lk of descHier.links()) {
+      const parentId = lk.source.data.id, childId = lk.target.data.id;
+      const famId = findParentFam(childId, parentId);
+      drawLink(cx + lk.source.x, cy + lk.source.y, cx + lk.target.x, cy + lk.target.y, '#374151',
+        famId ? { type: 'parent', famId, personA: parentId, personB: childId, childId } : null);
+    }
   }
 
   const drawnIds = new Set();
+  const nodePositions = new Map(); // id → {x, y}
 
   function drawTreeNode(x, y, data, isSelected) {
     if (drawnIds.has(data.id)) return;
     drawnIds.add(data.id);
+    nodePositions.set(data.id, { x, y });
     const p = data.p;
 
     const g = nodeG.append('g')
@@ -1838,12 +2077,17 @@ function renderTreeView(personId) {
       .style('cursor', 'pointer')
       .on('click', () => selectPerson(data.id));
 
+    const oneParent = filterOneParent && countParents(data.id) === 1;
     g.append('rect')
       .attr('width', NW).attr('height', NH).attr('rx', 6).attr('ry', 6)
       .attr('fill', colFill[p.sex] || colFill.U)
-      .attr('stroke', isSelected ? '#fbbf24' : (colStroke[p.sex] || colStroke.U))
-      .attr('stroke-width', isSelected ? 2.5 : 1.5)
+      .attr('stroke', isSelected ? '#fbbf24' : oneParent ? '#f59e0b' : (colStroke[p.sex] || colStroke.U))
+      .attr('stroke-width', isSelected ? 2.5 : oneParent ? 2 : 1.5)
       .attr('opacity', 0.9);
+    if (oneParent) {
+      g.append('circle').attr('cx', NW - 6).attr('cy', 6).attr('r', 5)
+        .attr('fill', '#f59e0b').attr('pointer-events', 'none');
+    }
 
     g.append('text')
       .attr('x', NW / 2).attr('y', 17)
@@ -1877,12 +2121,137 @@ function renderTreeView(personId) {
       ].join('');
       tip.style.display = 'block';
     })
-    .on('mousemove', e => { tip.style.left = (e.clientX + 14) + 'px'; tip.style.top = (e.clientY - 10) + 'px'; })
-    .on('mouseout',  () => { tip.style.display = 'none'; });
+    .on('mousemove', function(e) {
+      tip.style.left = (e.clientX + 14) + 'px'; tip.style.top = (e.clientY - 10) + 'px';
+      const rect = this.getBoundingClientRect();
+      const dx = e.clientX - rect.left, dy = e.clientY - rect.top;
+      const edgeH = 14, edgeV = 18;
+      let mode = null;
+      if      (dy < edgeV)               mode = 'parent';
+      else if (dy > rect.height - edgeV) mode = 'child';
+      else if (dx < edgeH)               mode = 'partner';
+      else if (dx > rect.width - edgeH)  mode = 'sibling';
+      if (mode) showTreePill(rect, mode, data.id); else hideTreePill();
+    })
+    .on('mouseout', () => { tip.style.display = 'none'; hideTreePill(); });
   }
 
   if (ancHier)  ancHier.each(n  => drawTreeNode(cx + n.x, cy - n.y, n.data, n.data.id === personId));
   if (descHier) descHier.each(n => { if (n.data.id !== personId) drawTreeNode(cx + n.x, cy + n.y, n.data, false); });
+
+  // ── Spouse pass: draw partners for every visible node ──────────────────
+  const drawnSpouseLinks = new Set();
+  for (const [id, pos] of [...nodePositions.entries()]) {
+    const p = persons[id];
+    for (const famId of p.fams) {
+      const fam = families[famId];
+      if (!fam) continue;
+      const spouseId = fam.husb === id ? fam.wife : fam.husb;
+      if (!spouseId || !persons[spouseId]) continue;
+      const linkKey = [id, spouseId].sort().join('|');
+      if (drawnSpouseLinks.has(linkKey)) continue;
+      drawnSpouseLinks.add(linkKey);
+
+      let sx, sy;
+      if (!drawnIds.has(spouseId)) {
+        // Not yet in tree — place to the right of this node
+        sx = pos.x + NW + 20;
+        sy = pos.y;
+        drawTreeNode(sx, sy, { id: spouseId, p: persons[spouseId] }, spouseId === selectedId);
+      } else {
+        const sp = nodePositions.get(spouseId);
+        if (!sp) continue;
+        sx = sp.x; sy = sp.y;
+      }
+
+      // Marriage link between the two nodes
+      const [lx, ly, rx, ry] = pos.x <= sx
+        ? [pos.x, pos.y, sx, sy]
+        : [sx,    sy,    pos.x, pos.y];
+      const mx1 = lx + NW / 2 + 4, my1 = ly, mx2 = rx - NW / 2 - 4, my2 = ry;
+      linkG.append('line')
+        .attr('x1', mx1).attr('y1', my1).attr('x2', mx2).attr('y2', my2)
+        .attr('stroke', '#d97706').attr('stroke-width', 2).attr('opacity', 0.85);
+      // Hit area
+      const marriageRelInfo = { type: 'marriage', famId, personA: id, personB: spouseId };
+      linkG.append('line')
+        .attr('x1', mx1).attr('y1', my1).attr('x2', mx2).attr('y2', my2)
+        .attr('stroke', 'transparent').attr('stroke-width', 12).style('cursor', 'pointer')
+        .on('mouseover', function() {
+          const mid = svgToPage((mx1 + mx2) / 2, (my1 + my2) / 2);
+          showRelPill(mid.x, mid.y, marriageRelInfo);
+        })
+        .on('mouseout', hideRelPill);
+    }
+  }
+
+  // ── Sibling pass: connect siblings sharing a parent family ─────────────
+  // Helper: rightmost x among drawn nodes near a given y
+  function maxXNearY(targetY) {
+    let mx = -Infinity;
+    for (const pos of nodePositions.values())
+      if (Math.abs(pos.y - targetY) < NH) mx = Math.max(mx, pos.x);
+    return mx === -Infinity ? cx : mx;
+  }
+
+  const processedSibFams = new Set();
+  for (const id of [...nodePositions.keys()]) {
+    const p = persons[id];
+    for (const famId of p.famc) {
+      if (processedSibFams.has(famId)) continue;
+      processedSibFams.add(famId);
+
+      const fam = families[famId];
+      if (!fam || fam.chil.length < 2) continue;
+
+      // Reference y-level: use first already-drawn sibling
+      const firstDrawn = fam.chil.find(cid => nodePositions.has(cid));
+      if (!firstDrawn) continue;
+      const refY = nodePositions.get(firstDrawn).y;
+
+      // Add undrawn siblings at same y, to the right of all current nodes
+      for (const cid of fam.chil) {
+        if (nodePositions.has(cid)) continue;
+        if (!persons[cid]) continue;
+        const nx = maxXNearY(refY) + NW + 20;
+        drawTreeNode(nx, refY, { id: cid, p: persons[cid] }, cid === selectedId);
+      }
+
+      // Collect all sibling positions, sorted left→right
+      const sibs = fam.chil
+        .filter(cid => nodePositions.has(cid))
+        .map(cid => nodePositions.get(cid))
+        .sort((a, b) => a.x - b.x);
+      if (sibs.length < 2) continue;
+
+      // Bracket: horizontal bar just above sibling nodes + vertical drops
+      const bracketY = Math.min(...sibs.map(s => s.y)) - NH / 2 - 12;
+      linkG.append('line')
+        .attr('x1', sibs[0].x).attr('y1', bracketY)
+        .attr('x2', sibs[sibs.length - 1].x).attr('y2', bracketY)
+        .attr('stroke', '#a78bfa').attr('stroke-width', 1.5)
+        .attr('stroke-dasharray', '4,3').attr('opacity', 0.75);
+      // Hit area on horizontal bracket bar
+      const sibRelInfo = { type: 'sibling', famId, personA: fam.chil[0], personB: fam.chil[1], children: fam.chil.filter(c => persons[c]) };
+      const bracketMidX = (sibs[0].x + sibs[sibs.length - 1].x) / 2;
+      linkG.append('line')
+        .attr('x1', sibs[0].x).attr('y1', bracketY)
+        .attr('x2', sibs[sibs.length - 1].x).attr('y2', bracketY)
+        .attr('stroke', 'transparent').attr('stroke-width', 12).style('cursor', 'pointer')
+        .on('mouseover', function() {
+          const mid = svgToPage(bracketMidX, bracketY);
+          showRelPill(mid.x, mid.y, sibRelInfo);
+        })
+        .on('mouseout', hideRelPill);
+      for (const s of sibs) {
+        linkG.append('line')
+          .attr('x1', s.x).attr('y1', bracketY)
+          .attr('x2', s.x).attr('y2', s.y - NH / 2)
+          .attr('stroke', '#a78bfa').attr('stroke-width', 1.5)
+          .attr('stroke-dasharray', '4,3').attr('opacity', 0.75);
+      }
+    }
+  }
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -1894,7 +2263,7 @@ function renderListView() {
   const tbody = document.getElementById('listBody');
   tbody.innerHTML = '';
 
-  const rows = Object.values(persons);
+  const rows = Object.values(persons).filter(p => !filterOneParent || countParents(p.id) === 1);
   rows.sort((a, b) => {
     const av = (a[listSortCol] || '').toString().toLowerCase();
     const bv = (b[listSortCol] || '').toString().toLowerCase();
@@ -2071,6 +2440,218 @@ function renderFanChart(personId) {
 }
 
 // ══════════════════════════════════════════════════════════════════
+// TREE ADD-PERSON PILL
+// ══════════════════════════════════════════════════════════════════
+const treeAddPill = document.getElementById('treeAddPill');
+let _pillTarget = null, _pillHideTimer = null;
+
+function showTreePill(nodeRect, mode, personId) {
+  clearTimeout(_pillHideTimer);
+  const wrapRect = document.getElementById('canvas-wrap').getBoundingClientRect();
+  const labels = {
+    parent:  '\u2191 Add parent',
+    child:   '\u2193 Add child',
+    partner: '\u2190 Add partner',
+    sibling: '\u2192 Add sibling',
+  };
+  const GAP = 10;
+  const cx = (nodeRect.left + nodeRect.right)  / 2 - wrapRect.left;
+  const cy = (nodeRect.top  + nodeRect.bottom) / 2 - wrapRect.top;
+  const top  = nodeRect.top    - wrapRect.top;
+  const bot  = nodeRect.bottom - wrapRect.top;
+  const left = nodeRect.left   - wrapRect.left;
+  const rgt  = nodeRect.right  - wrapRect.left;
+
+  treeAddPill.className = 'mode-' + mode;
+  treeAddPill.textContent = labels[mode];
+  treeAddPill.style.display = 'flex';
+
+  switch (mode) {
+    case 'parent':
+      treeAddPill.style.left      = cx + 'px';
+      treeAddPill.style.top       = (top - GAP) + 'px';
+      treeAddPill.style.transform = 'translate(-50%, -100%)';
+      break;
+    case 'child':
+      treeAddPill.style.left      = cx + 'px';
+      treeAddPill.style.top       = (bot + GAP) + 'px';
+      treeAddPill.style.transform = 'translate(-50%, 0)';
+      break;
+    case 'partner':
+      treeAddPill.style.left      = (left - GAP) + 'px';
+      treeAddPill.style.top       = cy + 'px';
+      treeAddPill.style.transform = 'translate(-100%, -50%)';
+      break;
+    case 'sibling':
+      treeAddPill.style.left      = (rgt + GAP) + 'px';
+      treeAddPill.style.top       = cy + 'px';
+      treeAddPill.style.transform = 'translate(0, -50%)';
+      break;
+  }
+  _pillTarget = { id: personId, mode };
+}
+
+function hideTreePill() {
+  _pillHideTimer = setTimeout(() => {
+    treeAddPill.style.display = 'none';
+    _pillTarget = null;
+  }, 600);
+}
+
+treeAddPill.addEventListener('mouseenter', () => clearTimeout(_pillHideTimer));
+treeAddPill.addEventListener('mouseleave', hideTreePill);
+treeAddPill.addEventListener('click', () => {
+  treeAddPill.style.display = 'none';
+  if (_pillTarget) openTreeAddModal(_pillTarget.id, _pillTarget.mode);
+});
+
+// ══════════════════════════════════════════════════════════════════
+// RELATIONSHIP EDIT PILL & MODAL
+// ══════════════════════════════════════════════════════════════════
+const relEditPill = document.getElementById('relEditPill');
+let _relTarget = null, _relHideTimer = null;
+
+function showRelPill(pageX, pageY, relInfo) {
+  clearTimeout(_relHideTimer);
+  _relTarget = relInfo;
+  const wrapRect = document.getElementById('canvas-wrap').getBoundingClientRect();
+  relEditPill.style.left      = (pageX - wrapRect.left) + 'px';
+  relEditPill.style.top       = (pageY - wrapRect.top)  + 'px';
+  relEditPill.style.transform = 'translate(-50%, -50%)';
+  relEditPill.style.display   = 'block';
+}
+
+function hideRelPill() {
+  _relHideTimer = setTimeout(() => {
+    relEditPill.style.display = 'none';
+    _relTarget = null;
+  }, 600);
+}
+
+relEditPill.addEventListener('mouseenter', () => clearTimeout(_relHideTimer));
+relEditPill.addEventListener('mouseleave', hideRelPill);
+relEditPill.addEventListener('click', () => {
+  relEditPill.style.display = 'none';
+  if (_relTarget) openRelEditModal(_relTarget);
+});
+
+function openRelEditModal(relInfo) {
+  const { type, famId, personA, personB, childId, children } = relInfo;
+  const nameA = personName(persons[personA]);
+  const nameB = personName(persons[personB]);
+  const typeLabel = type === 'marriage' ? 'Partnership' : type === 'parent' ? 'Parent–child' : 'Sibling group';
+  document.getElementById('relEditTitle').textContent = typeLabel;
+  document.getElementById('relEditDesc').textContent  = nameA + ' ↔ ' + nameB;
+
+  const btns = document.getElementById('relEditBtns');
+  btns.innerHTML = '';
+
+  const close = () => document.getElementById('relEditModal').classList.add('hidden');
+
+  if (type === 'marriage') {
+    const b = document.createElement('button');
+    b.className = 'rel-remove-btn';
+    b.textContent = '✕ Remove partnership';
+    b.onclick = () => { close(); removeSpouseLink(famId, personA); };
+    btns.appendChild(b);
+  } else if (type === 'parent') {
+    const b = document.createElement('button');
+    b.className = 'rel-remove-btn';
+    b.textContent = '✕ Remove parent–child link';
+    b.onclick = () => { close(); removeChildLink(famId, childId); };
+    btns.appendChild(b);
+  } else if (type === 'sibling') {
+    for (const cid of (children || [personA, personB])) {
+      if (!persons[cid]) continue;
+      const b = document.createElement('button');
+      b.className = 'rel-remove-btn';
+      b.textContent = '✕ Remove ' + personName(persons[cid]) + ' from family';
+      b.onclick = ((id) => () => { close(); removeChildLink(famId, id); })(cid);
+      btns.appendChild(b);
+    }
+  }
+
+  document.getElementById('relEditModal').classList.remove('hidden');
+}
+
+document.getElementById('relEditCancelBtn').addEventListener('click', () => {
+  document.getElementById('relEditModal').classList.add('hidden');
+});
+document.getElementById('relEditModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('relEditModal'))
+    document.getElementById('relEditModal').classList.add('hidden');
+});
+
+// ══════════════════════════════════════════════════════════════════
+// TREE ADD-PERSON MODAL
+// ══════════════════════════════════════════════════════════════════
+let _taId = null, _taMode = null;
+
+function openTreeAddModal(personId, mode) {
+  _taId = personId; _taMode = mode;
+  const titleMap = { parent: t('addParentTitle'), child: t('addChildTitle'), partner: t('addSpouseTitle'), sibling: '+ Add sibling' };
+  document.getElementById('treeAddTitle').textContent = titleMap[mode];
+  document.getElementById('treeAddSearch').value = '';
+  document.getElementById('treeAddResults').innerHTML = '';
+  document.getElementById('treeAddModal').classList.remove('hidden');
+  document.getElementById('treeAddSearch').focus();
+}
+
+function closeTreeAddModal() {
+  document.getElementById('treeAddModal').classList.add('hidden');
+  _taId = null; _taMode = null;
+}
+
+document.getElementById('treeAddSearch').addEventListener('input', function() {
+  const q = this.value.toLowerCase().trim();
+  const results = document.getElementById('treeAddResults');
+  results.innerHTML = '';
+  if (!q) return;
+  Object.values(persons)
+    .filter(p => p.id !== _taId && personName(p).toLowerCase().includes(q))
+    .slice(0, 12)
+    .forEach(p => {
+      const item = document.createElement('div');
+      item.className = 'search-item';
+      item.innerHTML = `<span>${personName(p)}</span><span class="s-id">${p.id}</span>`;
+      item.addEventListener('click', () => {
+        if (_taMode === 'parent')        addParent(_taId, p.id);
+        else if (_taMode === 'child')    addChild(_taId, p.id);
+        else if (_taMode === 'sibling')  addSibling(_taId, p.id);
+        else                             addSpouse(_taId, p.id);
+        closeTreeAddModal();
+      });
+      results.appendChild(item);
+    });
+});
+
+document.getElementById('treeAddNewBtn').addEventListener('click', () => {
+  const targetId = _taId, mode = _taMode;
+  closeTreeAddModal();
+  const newId = `@I${String(nextIndiN).padStart(4,'0')}@`;
+  nextIndiN++;
+  persons[newId] = {
+    id: newId, givn: t('newGivn'), surn: t('newSurn'), nick: '', titl: '',
+    alt_names: [], sex: 'U',
+    birth_date: '', birth_plac: '', bapm_date: '',  bapm_plac: '',
+    deat_date: '',  deat_plac: '',  buri_date: '',  buri_plac: '',
+    occu: [], nati: '', reli: '', educ: '',
+    resi_date: '', resi_plac: '', even: [], note: '', chan_date: '',
+    fams: [], famc: [], raw_lines: []
+  };
+  updateStatsEl();
+  if (mode === 'parent')        addParent(targetId, newId);
+  else if (mode === 'child')    addChild(targetId, newId);
+  else if (mode === 'sibling')  addSibling(targetId, newId);
+  else                          addSpouse(targetId, newId);
+  selectedId = newId;
+  rerender();
+  openPanel(newId);
+});
+
+document.getElementById('treeAddCancelBtn').addEventListener('click', closeTreeAddModal);
+
+// ══════════════════════════════════════════════════════════════════
 // CONTROLS
 // ══════════════════════════════════════════════════════════════════
 document.getElementById('slHops').addEventListener('input', function() {
@@ -2087,6 +2668,9 @@ document.getElementById('slLink').addEventListener('input', function() {
 });
 document.getElementById('chkNames').addEventListener('change', function() {
   if (labelSel) labelSel.attr('visibility', this.checked ? 'visible' : 'hidden');
+});
+document.getElementById('chkGen').addEventListener('change', () => {
+  if (selectedId && currentView === 'network') rerender();
 });
 document.getElementById('btnReset').addEventListener('click', () => {
   if (currentView === 'network') {
