@@ -14,6 +14,7 @@
     "notes":       { "type": "array", "items": { "type": "string" } },
     "uncertain":   { "type": "array", "items": { "type": "string" } },
     "restriction": { "type": "string", "enum": ["confidential", "locked", "privacy"] },
+    "recorded_by": { "type": "string", "description": "Name or identifier of the researcher who created or last modified this record" },
     "created":     { "type": "string", "description": "ISO 8601 datetime when this record was first created" },
     "changed":     { "type": "string", "description": "ISO 8601 datetime of last change" },
     "sources":     { "$ref": "#/$defs/sources" },
@@ -101,6 +102,7 @@
           "quality":       { "type": "integer", "minimum": 0, "maximum": 3 },
           "event_type":    { "type": "string" },
           "role":          { "type": "string" },
+          "recorded_by":   { "type": "string", "description": "Researcher who cited or transcribed this source" },
           "note":          { "type": "string" }
         },
         "additionalProperties": false
@@ -139,6 +141,7 @@
         "agency":        { "type": "string" },
         "religion":      { "type": "string" },
         "restriction":   { "type": "string", "enum": ["confidential", "locked", "privacy"] },
+        "recorded_by":   { "type": "string", "description": "Researcher who recorded this event" },
         "note":          { "type": "string" },
         "sources":       { "$ref": "#/$defs/sources" }
       },

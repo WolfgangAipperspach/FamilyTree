@@ -274,7 +274,7 @@ Applies to both `name` and each entry in `names[]`:
 | `death`        | object\|null | No       | Death event                         |
 | `burial`       | object\|null | No       | Burial event                        |
 
-`birth`, `death`, and `burial` each support: `date`, `date_qualifier`, `date_to`, `place`, `coords`, `age`, `cause`, `agency`, `restriction`, `note`, `sources`.
+`birth`, `death`, and `burial` each support: `date`, `date_qualifier`, `date_to`, `place`, `coords`, `age`, `cause`, `agency`, `restriction`, `recorded_by`, `note`, `sources`.
 
 ### Personal Attributes & Facts
 
@@ -325,7 +325,8 @@ Each entry: `{ "url": "…", "label": "Find A Grave", "type": "findagrave", "not
 | `notes`       | string[]     | Free-text notes, one entry per note      |
 | `sources`     | object[]     | Sources (see Sources section)            |
 | `events`      | object[]     | Life events (see Events section)         |
-| `uncertain`   | string[]     | Dot-notation paths of uncertain fields   |
+| `uncertain`   | string[]     | Dot-notation paths of uncertain fields                       |
+| `recorded_by` | string       | Researcher who created or last modified this record          |
 | `created`     | string       | ISO 8601 datetime when the record was first created          |
 | `changed`     | string       | ISO 8601 datetime of last change                             |
 
@@ -356,6 +357,7 @@ using dot-notation paths:
 | `notes`       | string[] | No       | Free-text notes                                     |
 | `uncertain`   | string[] | No       | Dot-notation paths of uncertain fields              |
 | `restriction` | string   | No       | `confidential`, `locked`, or `privacy`              |
+| `recorded_by` | string   | No       | Researcher who created or last modified this record |
 | `created`     | string   | No       | ISO 8601 datetime when this record was first created |
 | `changed`     | string   | No       | ISO 8601 datetime of last change                    |
 
@@ -437,6 +439,7 @@ Beyond `birth`, `death`, and `burial`, a person may have additional life events 
 | `agency`       | No       | all        | Responsible agency or organization                   |
 | `religion`     | No       | all        | Religious affiliation of the event                   |
 | `restriction`  | No       | all        | `confidential`, `locked`, or `privacy`               |
+| `recorded_by`  | No       | all        | Researcher who recorded this event                   |
 | `note`         | No       | all        | Free-text note                                       |
 | `sources`      | No       | all        | Sources for this event                               |
 
@@ -572,6 +575,7 @@ Each source is an inline object describing where the data came from.
 | `quality`       | No       | Certainty: `0` unreliable · `1` questionable · `2` secondary · `3` primary (GEDCOM `QUAY`) |
 | `event_type`    | No       | Type of event recorded in this source (e.g. `birth`, `marriage`)        |
 | `role`          | No       | Person's role in the cited event (e.g. `bride`, `witness`, `subject`)   |
+| `recorded_by`   | No       | Researcher who cited or transcribed this source                          |
 | `note`          | No       | Free-text note about the source                                          |
 
 ### Source Types
